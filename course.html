@@ -56,7 +56,11 @@
   --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
   --radius-lg:18px; --radius:14px; --radius-sm:10px; --pill:999px;
   --ease:cubic-bezier(.22,1,.36,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --dur-fast:160ms; --dur:220ms; --dur-slow:420ms;
   --sidebar-w:274px; --topbar-h:58px;
+  --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
 }
 
 /* ============================================================
@@ -77,6 +81,7 @@ a:hover { text-decoration:underline; }
 button,input { font:inherit; color:inherit; }
 button { background:none; border:none; cursor:pointer; }
 svg { display:block; }
+a, button, summary, input, label { -webkit-tap-highlight-color:transparent; }
 :focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
 ::selection { background:var(--accent-ring); color:var(--ink); }
 h1,h2,h3,h4,h5 { color:var(--ink); font-weight:600; line-height:1.24; letter-spacing:-.014em; }
@@ -192,11 +197,16 @@ strong,b { color:var(--ink); font-weight:600; }
 /* ============================================================
    REVEAL
    ============================================================ */
-.reveal { opacity:0; transform:translateY(16px); transition:opacity .7s var(--ease-out), transform .7s var(--ease-out); transition-delay:var(--delay,0ms); }
+.reveal { opacity:0; transform:translateY(12px); transition:opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out); transition-delay:var(--delay,0ms); }
 .reveal.is-visible { opacity:1; transform:none; }
 @media (prefers-reduced-motion:reduce) {
   html { scroll-behavior:auto; }
   .reveal { opacity:1 !important; transform:none !important; transition:none !important; }
+  .day[open] .step { animation:none !important; opacity:1 !important; transform:none !important; }
+  .step__check, .step__check:checked, .step__check:checked::after,
+  .code__copy.is-copied .tick { animation:none !important; }
+  .rail__ind, .day__wrap { transition:none !important; }
+  .swipe-hint::after { animation:none !important; }
   *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; }
 }
 
@@ -476,6 +486,87 @@ tr.is-filtered { display:none; }
 .totop svg { width:17px; height:17px; }
 
 /* ============================================================
+   SCROLL AFFORDANCE — fade the edge when there is more to see
+   ============================================================ */
+.scroll-x { -webkit-overflow-scrolling:touch; }
+.scroll-x.has-more {
+  -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 46px),transparent);
+          mask-image:linear-gradient(to right,#000 calc(100% - 46px),transparent);
+}
+.scroll-x.has-prev {
+  -webkit-mask-image:linear-gradient(to left,#000 calc(100% - 46px),transparent);
+          mask-image:linear-gradient(to left,#000 calc(100% - 46px),transparent);
+}
+.scroll-x.has-prev.has-more {
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 46px,#000 calc(100% - 46px),transparent);
+          mask-image:linear-gradient(to right,transparent,#000 46px,#000 calc(100% - 46px),transparent);
+}
+.rail, .cs__tabs, .ostabs, .tabs { scroll-snap-type:x proximity; }
+.rail a, .cs__tab, .ostab { scroll-snap-align:center; }
+
+/* one-time "swipe" hint on wide tables */
+.swipe-hint {
+  display:none; align-items:center; gap:6px; font-family:var(--font-mono);
+  font-size:12px; color:var(--ink-muted); margin:-10px 0 18px 2px;
+}
+.swipe-hint::after { content:'→'; animation:nudge 1.6s var(--ease) infinite; }
+@keyframes nudge { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
+
+/* ============================================================
+   TOUCH: press feedback, and no sticky hover states
+   ============================================================ */
+@media (hover:none) {
+  .day__head:hover { background:transparent; }
+  .day-card:hover, .btn:hover, .icon-btn:hover, .next__card:hover,
+  .sb__link:hover, .tool:hover, .outcome:hover { transform:none; box-shadow:inherit; }
+  tbody tr:hover { background:transparent; }
+}
+.btn:active, .icon-btn:active, .q__btn:active, .cs__tab:active,
+.ostab:active, .code__copy:active, .aopt:active { transform:scale(.97); }
+.day__head:active, .day-card:active, .next__card:active { transform:scale(.995); }
+.day__head, .day-card, .next__card { transition:transform var(--dur-fast) var(--ease), background-color var(--dur-fast); }
+
+/* ============================================================
+   MOTION — staggered steps, spring tick, rail indicator
+   ============================================================ */
+.day[open] .step { animation:stepIn 340ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 38ms); }
+@keyframes stepIn { from { opacity:0; transform:translateY(9px); } to { opacity:1; transform:none; } }
+
+.step__check { transition:background-color var(--dur-fast), border-color var(--dur-fast); }
+.step__check:checked { animation:tickPop 320ms var(--spring); }
+@keyframes tickPop { 0%{transform:scale(.82)} 55%{transform:scale(1.14)} 100%{transform:scale(1)} }
+.step__check:checked::after { animation:tickDraw 240ms var(--spring) both; transform-origin:60% 60%; }
+@keyframes tickDraw { from { opacity:0; transform:rotate(43deg) scale(.3); } to { opacity:1; transform:rotate(43deg) scale(1); } }
+
+/* generous hit area without changing the visual box */
+.step__check::before { content:''; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%); }
+
+.rail { position:relative; }
+.rail__ind {
+  position:absolute; left:0; top:0; width:0; height:0; z-index:0; opacity:0;
+  border-radius:var(--pill); background:var(--accent-soft); border:1px solid var(--accent);
+  transition:transform var(--dur-slow) var(--ease), width var(--dur-slow) var(--ease),
+             height var(--dur) var(--ease), top var(--dur) var(--ease), opacity var(--dur);
+  pointer-events:none;
+}
+.rail a { position:relative; z-index:1; }
+.rail a.is-active { background:transparent; border-color:transparent; color:var(--accent); }
+
+.code__copy .tick { display:none; }
+.code__copy.is-copied .lbl { display:none; }
+.code__copy.is-copied .tick { display:inline; animation:tickDrawPlain 260ms var(--spring) both; }
+@keyframes tickDrawPlain { from{opacity:0;transform:scale(.4)} to{opacity:1;transform:scale(1)} }
+
+/* two-way collapse */
+.day__wrap { transition:grid-template-rows var(--dur-slow) var(--ease); }
+.day.is-animating .day__wrap > div { overflow:hidden; }
+.day.is-animating > .day__wrap { animation:none; }
+
+/* View Transitions: circular wipe from the theme button */
+::view-transition-old(root) { animation:none; mix-blend-mode:normal; }
+::view-transition-new(root) { animation:none; mix-blend-mode:normal; }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width:1080px) {
@@ -489,17 +580,85 @@ tr.is-filtered { display:none; }
 }
 @media (max-width:600px) {
   body { font-size:16px; }
-  .content { padding:22px 16px 72px; }
-  .day__head { padding:18px 18px; gap:13px; }
-  .day__body { padding:2px 18px 22px; }
+  .content { padding:22px calc(16px + var(--safe-r)) calc(72px + var(--safe-b)) calc(16px + var(--safe-l)); }
+  .topbar__inner, .rail { padding-left:calc(16px + var(--safe-l)); padding-right:calc(16px + var(--safe-r)); }
+  .day__head { padding:18px 16px; gap:13px; align-items:flex-start; }
+  .day__body { padding:2px 16px 22px; }
   .day__badge { width:38px; height:38px; font-size:14px; }
-  .day__aside .pill { display:none; }
-  .lab { padding:20px 18px; }
-  .why { padding:18px 18px; }
-  .step { padding-left:32px; }
-  .assess__card { padding:20px 18px; }
-  .code pre { font-size:11.8px; }
+  .lab { padding:20px 16px; }
+  .why { padding:18px 16px; }
+  .step { padding-left:26px; padding-bottom:18px; }
+  .assess__card { padding:20px 16px; }
+  .code pre { font-size:12px; }
   .howto { grid-template-columns:1fr; }
+
+  /* --- status pill moves onto its own line, stays visible --- */
+  .day__aside { flex-direction:column; align-items:flex-end; gap:8px; }
+  .day__head .pill { order:2; }
+  .day__chev { order:1; }
+
+  /* --- tap targets: nothing interactive under 44px --- */
+  .rail a { min-height:44px; display:flex; align-items:center; }
+  .ostab { min-height:44px; display:flex; align-items:center; }
+  .cs__tab { min-height:44px; display:flex; align-items:center; }
+  .code__copy { min-height:44px; display:flex; align-items:center; padding:0 14px; }
+  .code__bar { padding:0 12px; min-height:44px; }
+  .q__btn { min-height:44px; display:inline-flex; align-items:center; }
+  .icon-btn { width:44px; height:44px; }
+  .sb__reset { min-height:44px; }
+  .aopt { padding:13px; }
+  .btn { min-height:44px; }
+
+  /* --- type floor: nothing rendered under 12px --- */
+  .eyebrow, .block__label, .day__kicker, .sb__section, .code__title,
+  .expect, .lab__count, .pill, .cs__tab, .ostab, .rail a, .chip,
+  thead th, .q__q span, .aq__q i, .howto__item i, .code__copy,
+  .code__copy .lbl, .code__copy .tick, .q__btn, .sb__num,
+  .foot p, .foot a, .next__card p, .aq__exp { font-size:12px; }
+  code, .icode { font-size:12.2px; }
+  .day__kicker .labs { display:none; }
+  .lab__meta { font-size:12.5px; }
+  .lab__meta .lab__count { margin-left:0; flex-basis:100%; }
+  .tablewrap.has-more + .swipe-hint { display:flex; }
+
+  .aopt b { font-size:12px; }
+  /* footer / inline nav links get a real tap area */
+  .foot a { display:inline-block; padding:10px 6px; min-width:44px; min-height:44px; line-height:24px; }
+  .topbar .sb__brand { padding:8px 4px 8px 0; min-height:44px; }
+  .totop { width:48px; height:48px; bottom:calc(18px + var(--safe-b)); }
+
+  /* --- dense tables become stacked cards --- */
+  .tablewrap:has(> .t-stack) { border:none; background:transparent; overflow:visible; }
+  table.t-stack, .t-stack tbody, .t-stack tr, .t-stack td { display:block; width:100%; }
+  .t-stack thead { display:none; }
+  .t-stack tr {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .t-stack tr:hover { background:var(--surface); }
+  .t-stack td { border:none; padding:0; white-space:normal; }
+  .t-stack td:first-child {
+    font-size:15.5px; font-weight:600; color:var(--ink);
+    padding-bottom:10px; margin-bottom:10px; border-bottom:1px dashed var(--border-strong);
+  }
+  .t-stack td[data-label] {
+    display:grid; grid-template-columns:minmax(72px,88px) minmax(0,1fr);
+    gap:12px; padding:5px 0; align-items:baseline;
+  }
+  .t-stack td[data-label]::before {
+    content:attr(data-label);
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; color:var(--ink-muted); line-height:1.45;
+  }
+  .t-stack td.mono { font-size:13px; }
+}
+
+@media (max-width:360px) {
+  .content { padding-left:calc(13px + var(--safe-l)); padding-right:calc(13px + var(--safe-r)); }
+  .day__head, .day__body { padding-left:13px; padding-right:13px; }
+  .lab, .why { padding-left:14px; padding-right:14px; }
+  .step { padding-left:24px; }
+  .t-stack td[data-label] { grid-template-columns:minmax(0,1fr); gap:2px; }
 }
 
 /* ============================================================
@@ -592,6 +751,7 @@ tr.is-filtered { display:none; }
   <span class="topbar__bar" id="topbarBar"></span>
 </div>
 <nav class="rail" id="rail" aria-label="Jump to day">
+  <span class="rail__ind" aria-hidden="true"></span>
   <a href="#day-1" data-day="1">Day 1</a>
   <a href="#day-2" data-day="2">Day 2</a>
   <a href="#day-3" data-day="3">Day 3</a>
@@ -633,7 +793,7 @@ tr.is-filtered { display:none; }
   <summary class="day__head">
     <span class="day__badge">01</span>
     <span class="day__titles">
-      <span class="day__kicker">Day One · ~90 minutes · 2 labs</span>
+      <span class="day__kicker">Day One · ~90 minutes<span class="labs"> · 2 labs</span></span>
       <span class="day__title">Networking fundamentals</span>
     </span>
     <span class="day__aside">
@@ -1002,7 +1162,7 @@ Hosts/Net: 254                   Class C, <span class="g">Private Internet</span
   <summary class="day__head">
     <span class="day__badge">02</span>
     <span class="day__titles">
-      <span class="day__kicker">Day Two · ~90 minutes · 3 labs</span>
+      <span class="day__kicker">Day Two · ~90 minutes<span class="labs"> · 3 labs</span></span>
       <span class="day__title">Devices &amp; topology</span>
     </span>
     <span class="day__aside">
@@ -1413,7 +1573,7 @@ Gateway of last resort is not set
   <summary class="day__head">
     <span class="day__badge">03</span>
     <span class="day__titles">
-      <span class="day__kicker">Day Three · ~90 minutes · 3 labs</span>
+      <span class="day__kicker">Day Three · ~90 minutes<span class="labs"> · 3 labs</span></span>
       <span class="day__title">Core protocols, ports &amp; the handshake</span>
     </span>
     <span class="day__aside">
@@ -1766,7 +1926,7 @@ Content-Length: 1256</pre></div>
   <summary class="day__head">
     <span class="day__badge">04</span>
     <span class="day__titles">
-      <span class="day__kicker">Day Four · ~100 minutes · 3 labs</span>
+      <span class="day__kicker">Day Four · ~100 minutes<span class="labs"> · 3 labs</span></span>
       <span class="day__title">DNS, HTTP/HTTPS &amp; the full packet flow</span>
     </span>
     <span class="day__aside">
@@ -2175,7 +2335,7 @@ dns &amp;&amp; !(ip.addr == 192.168.1.1)           <span class="o"># DNS not goi
   <summary class="day__head">
     <span class="day__badge">05</span>
     <span class="day__titles">
-      <span class="day__kicker">Day Five · ~100 minutes · 3 labs</span>
+      <span class="day__kicker">Day Five · ~100 minutes<span class="labs"> · 3 labs</span></span>
       <span class="day__title">Network security: controls &amp; attacks</span>
     </span>
     <span class="day__aside">
@@ -2578,7 +2738,7 @@ show port-security interface FastEthernet0/1</pre></div>
   <summary class="day__head">
     <span class="day__badge">06</span>
     <span class="day__titles">
-      <span class="day__kicker">Day Six · ~110 minutes · 3 labs</span>
+      <span class="day__kicker">Day Six · ~110 minutes<span class="labs"> · 3 labs</span></span>
       <span class="day__title">Practical traffic analysis</span>
     </span>
     <span class="day__aside">
@@ -2930,7 +3090,7 @@ tshark -r sample.pcap -Y "dns.flags.response == 0" \
   <summary class="day__head">
     <span class="day__badge">07</span>
     <span class="day__titles">
-      <span class="day__kicker">Day Seven · ~2.5 hours · capstone</span>
+      <span class="day__kicker">Day Seven · ~2.5 hours<span class="labs"> · capstone</span></span>
       <span class="day__title">Build it, break it, fix it</span>
     </span>
     <span class="day__aside">
@@ -4102,11 +4262,29 @@ interface Gi0/0.10
   }
 
   /* ---------- theme ---------- */
+  function applyTheme(next) {
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  }
   $$('#themeToggle, [data-theme-toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+
+      // Circular wipe out of the button itself, where supported.
+      if (reduced || !document.startViewTransition) { applyTheme(next); return; }
+
+      var r = btn.getBoundingClientRect();
+      var x = r.left + r.width / 2, y = r.top + r.height / 2;
+      var reach = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+      document.startViewTransition(function () { applyTheme(next); }).ready.then(function () {
+        document.documentElement.animate(
+          { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)',
+                       'circle(' + reach + 'px at ' + x + 'px ' + y + 'px)'] },
+          { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)',
+            pseudoElement: '::view-transition-new(root)' }
+        );
+      }).catch(function () { /* transition interrupted — theme is already applied */ });
     });
   });
 
@@ -4129,7 +4307,6 @@ interface Gi0/0.10
     if (ringPct) ringPct.textContent = pct + '%';
     if (progText) progText.textContent = doneDays + ' of ' + TOTAL_DAYS + ' days';
     if (mobilePct) mobilePct.textContent = pct + '%';
-    if (topbarBar) topbarBar.style.width = pct + '%';
 
     // step checkboxes + per-lab counts
     var groups = {};
@@ -4222,9 +4399,8 @@ interface Gi0/0.10
     if (!pre) return;
     var text = pre.innerText;
     var done = function () {
-      btn.textContent = 'Copied';
       btn.classList.add('is-copied');
-      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('is-copied'); }, 1600);
+      setTimeout(function () { btn.classList.remove('is-copied'); }, 1600);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text, done); });
@@ -4388,6 +4564,7 @@ interface Gi0/0.10
   var navLinks = $$('.sb__link[href^="#"], .rail a[href^="#"]');
   function setActive(id) {
     navLinks.forEach(function (a) { a.classList.toggle('is-active', a.getAttribute('href') === '#' + id); });
+    moveRailIndicator();
   }
   var spyTargets = $$('.day, #cheatsheet, #assessment, #next');
   if ('IntersectionObserver' in window && spyTargets.length) {
@@ -4440,9 +4617,136 @@ interface Gi0/0.10
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
   });
 
+  /* ---------- copy buttons: label morphs into a tick ---------- */
+  $$('.code__copy').forEach(function (b) {
+    b.innerHTML = '<span class="lbl">Copy</span><span class="tick">✓ Copied</span>';
+  });
+
+  /* ---------- dense tables become stacked cards on phones ----------
+     Labelling every cell by hand across ~45 tables would be unmaintainable,
+     so derive the labels from each table's own header row once, at load. */
+  function labelTables() {
+    $$('.tablewrap table').forEach(function (t) {
+      var heads = $$('thead th', t).map(function (th) { return th.textContent.trim(); });
+      if (heads.length < 4) return;              // narrow tables keep scrolling instead
+      t.classList.add('t-stack');
+      $$('tbody tr', t).forEach(function (tr) {
+        Array.prototype.forEach.call(tr.children, function (td, i) {
+          if (i && heads[i]) td.setAttribute('data-label', heads[i]);
+        });
+      });
+    });
+  }
+
+  /* ---------- fade the edge of anything that scrolls sideways ---------- */
+  function watchScroller(el) {
+    if (!el || el.dataset.sxBound) return;
+    el.dataset.sxBound = '1';
+    el.classList.add('scroll-x');
+    var update = function () {
+      var max = el.scrollWidth - el.clientWidth;
+      el.classList.toggle('has-more', max > 2 && el.scrollLeft < max - 2);
+      el.classList.toggle('has-prev', max > 2 && el.scrollLeft > 2);
+    };
+    el.addEventListener('scroll', update, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(update).observe(el);
+    update();
+    return update;
+  }
+  function initScrollers() {
+    $$('.tablewrap, .rail, .cs__tabs, .ostabs, .diagram, .code pre').forEach(watchScroller);
+    // swipe hint, shown by CSS only while that table actually has more to the right
+    $$('.tablewrap').forEach(function (w) {
+      var t = w.querySelector('table');
+      if (!t || t.classList.contains('t-stack')) return;
+      if (w.nextElementSibling && w.nextElementSibling.classList.contains('swipe-hint')) return;
+      var hint = document.createElement('p');
+      hint.className = 'swipe-hint';
+      hint.textContent = 'swipe for more';
+      w.parentNode.insertBefore(hint, w.nextSibling);
+    });
+  }
+
+  /* ---------- stagger index for the step reveal ---------- */
+  function indexSteps() {
+    $$('.steps').forEach(function (list) {
+      $$('.step', list).forEach(function (s, i) { s.style.setProperty('--i', Math.min(i, 8)); });
+    });
+  }
+
+  /* ---------- sliding indicator on the mobile day rail ---------- */
+  var rail = $('#rail'), railInd = $('.rail__ind');
+  function moveRailIndicator() {
+    if (!rail || !railInd) return;
+    var active = rail.querySelector('a.is-active');
+    if (!active) { railInd.style.opacity = '0'; return; }
+    railInd.style.opacity = '1';
+    railInd.style.width = active.offsetWidth + 'px';
+    railInd.style.height = active.offsetHeight + 'px';
+    railInd.style.top = active.offsetTop + 'px';
+    railInd.style.transform = 'translateX(' + active.offsetLeft + 'px)';
+    // keep the active chip in view without yanking the page
+    var target = active.offsetLeft - (rail.clientWidth - active.offsetWidth) / 2;
+    rail.scrollTo({ left: Math.max(0, target), behavior: reduced ? 'auto' : 'smooth' });
+  }
+
+  /* ---------- reading progress across a very long document ---------- */
+  function updateReadingProgress() {
+    if (!topbarBar) return;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0;
+    topbarBar.style.width = pct.toFixed(2) + '%';
+  }
+  window.addEventListener('scroll', updateReadingProgress, { passive: true });
+  window.addEventListener('resize', function () { updateReadingProgress(); moveRailIndicator(); });
+
+  /* ---------- animate days closed as well as open ---------- */
+  $$('.day').forEach(function (d) {
+    var summary = d.querySelector('.day__head');
+    var wrap = d.querySelector('.day__wrap');
+    if (!summary || !wrap) return;
+    summary.addEventListener('click', function (e) {
+      if (reduced) return;                       // native toggle, no animation
+      e.preventDefault();
+      if (d.classList.contains('is-animating')) return;
+      d.classList.add('is-animating');
+
+      var settle = function () {
+        d.classList.remove('is-animating');
+        wrap.style.gridTemplateRows = '';
+      };
+      var finish = function (fn) {
+        var done = false;
+        var once = function () { if (done) return; done = true; wrap.removeEventListener('transitionend', once); fn(); };
+        wrap.addEventListener('transitionend', once);
+        setTimeout(once, 600);                   // fallback if transitionend never fires
+      };
+
+      if (d.open) {
+        wrap.style.gridTemplateRows = '1fr';
+        requestAnimationFrame(function () {
+          wrap.style.gridTemplateRows = '0fr';
+          finish(function () { d.open = false; settle(); });
+        });
+      } else {
+        d.open = true;
+        wrap.style.gridTemplateRows = '0fr';
+        requestAnimationFrame(function () {
+          wrap.style.gridTemplateRows = '1fr';
+          finish(settle);
+        });
+      }
+    });
+  });
+
   /* ---------- boot ---------- */
+  labelTables();
+  indexSteps();
+  initScrollers();
   render();
   openFromHash();
+  updateReadingProgress();
+  moveRailIndicator();
 })();
 </script>
 </body>

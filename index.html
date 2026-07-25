@@ -93,8 +93,12 @@
   --pill: 999px;
   --ease: cubic-bezier(.22,1,.36,1);
   --ease-out: cubic-bezier(.16,1,.3,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+  --dur-fast: 160ms; --dur: 220ms; --dur-slow: 420ms;
   --maxw: 1160px;
   --nav-h: 64px;
+  --safe-l: env(safe-area-inset-left, 0px); --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
 /* ============================================================
@@ -237,11 +241,36 @@ strong { color: var(--ink); font-weight: 600; }
    SCROLL REVEAL
    ============================================================ */
 .reveal {
-  opacity: 0; transform: translateY(20px);
-  transition: opacity .75s var(--ease-out), transform .75s var(--ease-out);
+  opacity: 0; transform: translateY(12px);
+  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
   transition-delay: var(--delay, 0ms);
 }
 .reveal.is-visible { opacity: 1; transform: none; }
+
+/* --- horizontal scroll affordance --- */
+.scroll-x { -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.scroll-x.has-more {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 46px), transparent);
+          mask-image: linear-gradient(to right, #000 calc(100% - 46px), transparent);
+}
+.scroll-x.has-prev {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 46px), transparent);
+          mask-image: linear-gradient(to left, #000 calc(100% - 46px), transparent);
+}
+.scroll-x.has-prev.has-more {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 46px, #000 calc(100% - 46px), transparent);
+          mask-image: linear-gradient(to right, transparent, #000 46px, #000 calc(100% - 46px), transparent);
+}
+
+/* --- touch: no latched hover, real press feedback --- */
+a, button, summary { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) {
+  .day-card:hover, .btn:hover, .icon-btn:hover, .tool:hover,
+  .outcome:hover, .nav__link:hover, .tab:hover { transform: none; }
+}
+.btn:active, .icon-btn:active, .tab:active { transform: scale(.97); }
+.day-card:active, .tool:active, .outcome:active { transform: scale(.99); }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
@@ -570,15 +599,41 @@ strong { color: var(--ink); font-weight: 600; }
   .section { padding: 68px 0; }
   .hero { padding: 56px 0 60px; }
 }
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   body { font-size: 16px; }
-  .wrap, .nav__inner { padding-inline: 18px; }
+  .wrap, .nav__inner {
+    padding-left: calc(18px + var(--safe-l));
+    padding-right: calc(18px + var(--safe-r));
+  }
+  .footer { padding-bottom: calc(40px + var(--safe-b)); }
   .hero__cta .btn { flex: 1 1 100%; }
   .days { grid-template-columns: 1fr; }
   .panel { padding: 24px 20px; }
   .brand__chip { display: none; }
   .stat__num { font-size: 33px; }
-  .term__body { font-size: 11.6px; min-height: 280px; padding: 15px 15px 18px; }
+  .term__body { font-size: 12px; min-height: 280px; padding: 15px 15px 18px; }
+
+  /* tap targets */
+  .btn, .icon-btn { min-height: 44px; }
+  .icon-btn { width: 44px; height: 44px; min-width: 44px; flex-shrink: 0; }
+  .nav__actions { gap: 8px; }
+  .brand { min-height: 44px; }
+  .footer nav a { display: inline-block; padding: 10px 6px; min-width: 44px; min-height: 44px; line-height: 24px; }
+  .faq summary { padding-top: 20px; padding-bottom: 20px; }
+
+  /* type floor */
+  .eyebrow, .chip, .day-card__num, .day-card__time, .tool__meta,
+  .day-card__lab .tag, .brand__chip, .stat__label, .hero__meta,
+  .tab__label, .footer p, .footer nav a, .term__title { font-size: 12px; }
+  .icode, .panel code { font-size: 12.2px; }
+
+  /* the sample-lesson tabs were the worst offender: only tab 1 was visible
+     with no hint the other two existed. Compact 3-up, no scrolling. */
+  .tabs { flex-direction: row; gap: 6px; overflow: visible; }
+  .tab { min-width: 0; flex: 1 1 0; padding: 12px 10px; text-align: center; }
+  .tab__desc { display: none; }
+  .tab__title { font-size: 13.5px; line-height: 1.25; }
+  .tab__label { margin-bottom: 4px; }
 }
 </style>
 </head>
@@ -1015,10 +1070,41 @@ strong { color: var(--ink); font-weight: 600; }
 
   /* ---------- Theme ---------- */
   var toggle = document.getElementById('themeToggle');
-  toggle.addEventListener('click', function () {
-    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  function applyTheme(next) {
     document.documentElement.setAttribute('data-theme', next);
     try { localStorage.setItem('packetpath.theme', next); } catch (e) {}
+  }
+  toggle.addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+
+    // Circular wipe out of the button itself, where supported.
+    if (reduced || !document.startViewTransition) { applyTheme(next); return; }
+
+    var r = toggle.getBoundingClientRect();
+    var x = r.left + r.width / 2, y = r.top + r.height / 2;
+    var reach = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+    document.startViewTransition(function () { applyTheme(next); }).ready.then(function () {
+      document.documentElement.animate(
+        { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)',
+                     'circle(' + reach + 'px at ' + x + 'px ' + y + 'px)'] },
+        { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)',
+          pseudoElement: '::view-transition-new(root)' }
+      );
+    }).catch(function () { /* interrupted — theme already applied */ });
+  });
+
+  /* ---------- fade the edge of anything that scrolls sideways ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs, .pre, .panel .pre'), function (el) {
+    el.classList.add('scroll-x');
+    var update = function () {
+      var max = el.scrollWidth - el.clientWidth;
+      el.classList.toggle('has-more', max > 2 && el.scrollLeft < max - 2);
+      el.classList.toggle('has-prev', max > 2 && el.scrollLeft > 2);
+    };
+    el.addEventListener('scroll', update, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(update).observe(el);
+    update();
   });
 
   /* ---------- Sticky nav shadow ---------- */
