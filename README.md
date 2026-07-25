@@ -1,5 +1,7 @@
 # Packet Path — a 7-day networking course for cybersecurity beginners
 
+**Live at [sashank3201.github.io/Network1](https://sashank3201.github.io/Network1/)**
+
 A self-contained, hands-on networking course built for people going into security.
 Two HTML files, no build step, no dependencies, no accounts, no server.
 
