@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [claude/cybersecurity-networking-course-188ppl]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # enablement: true creates the Pages site via the API using the workflow
+      # token, so the site does not have to be switched on by hand first.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Served verbatim — the Actions deploy path does not run Jekyll,
+      # so no .nojekyll file is needed.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
