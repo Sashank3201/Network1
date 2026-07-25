@@ -1157,39 +1157,39 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
           <circle class="jping" id="jping" cx="120" cy="250" r="34"/>
 
           <g id="jnodes">
-          <g class="jn" data-node="you" transform="translate(120,250)">
+          <g class="jn" data-node="you" transform="translate(120,221)">
             <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
             <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
             <text class="jn__t" y="6">YOU</text>
-            <text class="jn__l" y="52">192.168.1.24</text>
+            <text class="jn__l" y="60">192.168.1.24</text>
           </g>
-          <g class="jn" data-node="router" transform="translate(380,250)">
+          <g class="jn" data-node="router" transform="translate(380,221)">
             <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
             <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
             <text class="jn__t" y="6">RTR</text>
-            <text class="jn__l" y="52">gateway</text>
+            <text class="jn__l" y="60">gateway</text>
           </g>
-          <g class="jn" data-node="resolver" transform="translate(395,470)">
+          <g class="jn" data-node="resolver" transform="translate(490,499)">
             <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
             <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
             <text class="jn__t" y="6">DNS</text>
-            <text class="jn__l" y="52">resolver</text>
+            <text class="jn__l" y="60">resolver</text>
           </g>
-          <g class="jn" data-node="isp" transform="translate(660,250)">
+          <g class="jn" data-node="isp" transform="translate(660,221)">
             <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
             <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
             <text class="jn__t" y="6">ISP</text>
-            <text class="jn__l" y="52">hops</text>
+            <text class="jn__l" y="60">hops</text>
           </g>
-          <g class="jn" data-node="server" transform="translate(880,250)">
+          <g class="jn" data-node="server" transform="translate(880,221)">
             <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
             <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
             <text class="jn__t" y="6">SRV</text>
-            <text class="jn__l" y="52">93.184.216.34</text>
+            <text class="jn__l" y="60">93.184.216.34</text>
           </g>
           </g>
 
-          <g class="jpk" id="jpacket" transform="translate(120,250)">
+          <g class="jpk" id="jpacket" transform="translate(120,221)">
             <circle class="jpk__halo" r="30"/>
             <rect class="jpk__core" x="-9" y="-6.5" width="18" height="13" rx="3.5"/>
           </g>
@@ -1841,12 +1841,12 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
     /* The request's actual route, in order: out to the resolver and back,
        then the real packet to the gateway, across the hops, and home again. */
     var SEGS = [
-      'M120,250 L336,250 C366,250 374,268 375,300 L375,430 C375,456 378,470 395,470',
-      'M395,470 C412,470 415,456 415,430 L415,300 C416,268 408,252 380,250 L120,250',
+      'M120,250 L430,250 C464,250 472,270 472,302 L472,430 C472,458 474,470 490,470',
+      'M490,470 C507,470 510,458 510,430 L510,302 C510,270 502,252 470,250 L120,250',
       'M120,250 L380,250',
       'M380,250 L660,250 L880,250',
-      'M880,250 C946,250 962,196 940,164 C918,132 880,110 840,110 L240,110 ' +
-      'C168,110 120,150 120,196 L120,250'
+      'M880,250 C946,250 962,196 940,164 C918,132 880,110 840,110 L200,110 ' +
+      'C130,110 62,146 62,198 C62,230 84,250 120,250'
     ];
 
     /* Join into a SINGLE subpath. Every M starts a new subpath, and
