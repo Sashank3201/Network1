@@ -561,18 +561,6 @@ tr.is-filtered { display:none; }
    SCROLL AFFORDANCE — fade the edge when there is more to see
    ============================================================ */
 .scroll-x { -webkit-overflow-scrolling:touch; }
-.scroll-x.has-more {
-  -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 46px),transparent);
-          mask-image:linear-gradient(to right,#000 calc(100% - 46px),transparent);
-}
-.scroll-x.has-prev {
-  -webkit-mask-image:linear-gradient(to left,#000 calc(100% - 46px),transparent);
-          mask-image:linear-gradient(to left,#000 calc(100% - 46px),transparent);
-}
-.scroll-x.has-prev.has-more {
-  -webkit-mask-image:linear-gradient(to right,transparent,#000 46px,#000 calc(100% - 46px),transparent);
-          mask-image:linear-gradient(to right,transparent,#000 46px,#000 calc(100% - 46px),transparent);
-}
 .rail, .cs__tabs, .ostabs, .tabs { scroll-snap-type:x proximity; }
 .rail a, .cs__tab, .ostab { scroll-snap-align:center; }
 
@@ -634,9 +622,23 @@ tr.is-filtered { display:none; }
 .day.is-animating .day__wrap > div { overflow:hidden; }
 .day.is-animating > .day__wrap { animation:none; }
 
-/* View Transitions: circular wipe from the theme button */
-::view-transition-old(root) { animation:none; mix-blend-mode:normal; }
-::view-transition-new(root) { animation:none; mix-blend-mode:normal; }
+/* --- theme change: one uniform crossfade, briefly applied to everything.
+   A View Transition has to snapshot the whole (very tall) page, which stutters. --- */
+html.theming, html.theming *, html.theming *::before, html.theming *::after {
+  transition: background-color 300ms var(--ease),
+              color 300ms var(--ease),
+              border-color 300ms var(--ease),
+              fill 300ms var(--ease),
+              stroke 300ms var(--ease),
+              box-shadow 300ms var(--ease),
+              opacity 300ms var(--ease) !important;
+  transition-delay: 0s !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.theming, html.theming *, html.theming *::before, html.theming *::after {
+    transition: none !important;
+  }
+}
 
 /* ============================================================
    RESPONSIVE
@@ -4341,29 +4343,20 @@ interface Gi0/0.10
   }
 
   /* ---------- theme ---------- */
+  var themeTimer;
   function applyTheme(next) {
-    document.documentElement.setAttribute('data-theme', next);
+    var root = document.documentElement;
+    if (!reduced) {
+      root.classList.add('theming');
+      clearTimeout(themeTimer);
+      themeTimer = setTimeout(function () { root.classList.remove('theming'); }, 360);
+    }
+    root.setAttribute('data-theme', next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
   }
   $$('#themeToggle, [data-theme-toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-
-      // Circular wipe out of the button itself, where supported.
-      if (reduced || !document.startViewTransition) { applyTheme(next); return; }
-
-      var r = btn.getBoundingClientRect();
-      var x = r.left + r.width / 2, y = r.top + r.height / 2;
-      var reach = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-
-      document.startViewTransition(function () { applyTheme(next); }).ready.then(function () {
-        document.documentElement.animate(
-          { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)',
-                       'circle(' + reach + 'px at ' + x + 'px ' + y + 'px)'] },
-          { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)',
-            pseudoElement: '::view-transition-new(root)' }
-        );
-      }).catch(function () { /* transition interrupted — theme is already applied */ });
+      applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     });
   });
 

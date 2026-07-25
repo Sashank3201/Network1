@@ -249,18 +249,6 @@ strong { color: var(--ink); font-weight: 600; }
 
 /* --- horizontal scroll affordance --- */
 .scroll-x { -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
-.scroll-x.has-more {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 46px), transparent);
-          mask-image: linear-gradient(to right, #000 calc(100% - 46px), transparent);
-}
-.scroll-x.has-prev {
-  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 46px), transparent);
-          mask-image: linear-gradient(to left, #000 calc(100% - 46px), transparent);
-}
-.scroll-x.has-prev.has-more {
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 46px, #000 calc(100% - 46px), transparent);
-          mask-image: linear-gradient(to right, transparent, #000 46px, #000 calc(100% - 46px), transparent);
-}
 
 /* --- touch: no latched hover, real press feedback --- */
 a, button, summary { -webkit-tap-highlight-color: transparent; }
@@ -269,6 +257,25 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   .outcome:hover, .nav__link:hover, .tab:hover { transform: none; }
 }
 .btn:active, .icon-btn:active, .tab:active { transform: scale(.97); }
+
+/* --- theme change: one uniform crossfade, briefly applied to everything.
+   A View Transition has to snapshot the whole (very tall) page, which stutters. --- */
+html.theming, html.theming *, html.theming *::before, html.theming *::after {
+  transition: background-color 300ms var(--ease),
+              color 300ms var(--ease),
+              border-color 300ms var(--ease),
+              fill 300ms var(--ease),
+              stroke 300ms var(--ease),
+              box-shadow 300ms var(--ease),
+              opacity 300ms var(--ease) !important;
+  transition-delay: 0s !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.theming, html.theming *, html.theming *::before, html.theming *::after {
+    transition: none !important;
+  }
+}
+
 
 /* --- heading line reveal: each line rises from behind a clip --- */
 .lines { display: block; }
@@ -442,185 +449,214 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 .journey { position: relative; background: var(--term-bg); color: var(--term-ink); }
 .journey::before,
 .journey::after {
-  content: ''; position: absolute; left: 0; right: 0; height: 90px; pointer-events: none; z-index: 2;
+  content: ''; position: absolute; left: 0; right: 0; height: 120px; pointer-events: none; z-index: 2;
 }
 .journey::before { top: 0; background: linear-gradient(var(--term-bg), transparent); }
 .journey::after { bottom: 0; background: linear-gradient(transparent, var(--term-bg)); }
 .journey__track { height: 560vh; }
 .jstage {
-  position: sticky; top: 0; height: 100vh; min-height: 560px;
-  display: grid; grid-template-columns: minmax(0, .86fr) minmax(0, 1.14fr);
-  gap: 48px; align-items: center;
-  max-width: var(--maxw); margin-inline: auto;
-  padding: 0 calc(24px + var(--safe-l)) 0 calc(24px + var(--safe-r));
+  position: sticky; top: 0; height: 100vh; min-height: 600px;
+  display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  gap: 64px; align-items: center;
+  max-width: 1240px; margin-inline: auto;
+  padding-left: calc(28px + var(--safe-l)); padding-right: calc(28px + var(--safe-r));
 }
 
-/* --- left column: the narration --- */
-.jcopy { position: relative; z-index: 3; }
+/* --- left: the narration --- */
+.jcopy { position: relative; z-index: 3; display: flex; flex-direction: column; }
 .jcopy__eyebrow {
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--term-accent); margin-bottom: 20px; display: block;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--term-accent); margin-bottom: 26px;
+  display: flex; align-items: center; gap: 10px;
 }
-.jcopy__steps { position: relative; min-height: 260px; }
+.jcopy__eyebrow::after { content: ''; flex: 1; height: 1px; background: #322D29; }
+.jcopy__steps { position: relative; min-height: 288px; }
 .jstep {
   position: absolute; inset: 0;
-  opacity: 0; visibility: hidden; transform: translateY(14px); pointer-events: none;
-  transition: opacity .38s var(--ease-out), transform .38s var(--ease-out), visibility 0s .38s;
+  opacity: 0; visibility: hidden; transform: translateY(12px); pointer-events: none;
+  transition: opacity .4s var(--ease-out), transform .4s var(--ease-out), visibility 0s .4s;
 }
 .jstep.is-on {
   opacity: 1; visibility: visible; transform: none; pointer-events: auto;
-  transition: opacity .38s var(--ease-out), transform .38s var(--ease-out), visibility 0s;
+  transition: opacity .4s var(--ease-out), transform .4s var(--ease-out), visibility 0s;
 }
 .jstep__n {
-  font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em;
-  color: var(--term-muted); display: block; margin-bottom: 12px;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em;
+  color: #7C736A; display: block; margin-bottom: 14px;
 }
+.jstep__n b { color: var(--term-accent); font-weight: 500; }
 .jstep h3 {
   font-family: var(--font-display); font-weight: 400;
-  font-size: clamp(28px, 3.6vw, 42px); line-height: 1.08; letter-spacing: -.018em;
-  color: var(--term-ink); margin-bottom: 14px;
+  font-size: clamp(30px, 3.5vw, 44px); line-height: 1.06; letter-spacing: -.02em;
+  color: #FBF9F5; margin-bottom: 16px;
 }
-.jstep p { font-size: 16.5px; line-height: 1.62; color: #A8A197; max-width: 46ch; margin-bottom: 16px; }
+.jstep p { font-size: 16.5px; line-height: 1.66; color: #A9A198; max-width: 44ch; }
 .jstep code {
   font-family: var(--font-mono); font-size: 13px; color: var(--term-accent);
-  background: rgba(229,130,92,.11); border: 1px solid rgba(229,130,92,.22);
+  background: rgba(229,130,92,.10); border: 1px solid rgba(229,130,92,.2);
   padding: 2px 7px; border-radius: 6px; white-space: pre-wrap;
 }
-.jprog { display: flex; gap: 5px; margin-top: 30px; }
+.jprog { display: flex; gap: 6px; margin-top: 34px; }
 .jprog i {
-  width: 26px; height: 3px; border-radius: 2px; background: #3A3530;
-  transition: background-color .35s var(--ease), transform .35s var(--ease);
-  transform-origin: left;
+  width: 30px; height: 2px; border-radius: 2px; background: #35302B;
+  transition: background-color .4s var(--ease);
 }
-.jprog i.is-on { background: var(--term-accent); }
-.jprog i.is-past { background: #6E5A4E; }
+.jprog i.is-past { background: #6B564A; }
+.jprog i.is-on { background: var(--term-accent); box-shadow: 0 0 10px rgba(229,130,92,.6); }
 
-/* --- right column: the diagram --- */
+/* --- right: the diagram --- */
 .jdiagram {
-  position: relative; aspect-ratio: 1 / .78; width: 100%;
-  border: 1px solid var(--term-border); border-radius: var(--radius-lg);
+  position: relative; height: min(64vh, 560px); width: 100%;
+  border: 1px solid #2C2825; border-radius: var(--radius-lg);
   background:
-    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(229,130,92,.07), transparent 70%),
-    var(--term-bg-2);
+    radial-gradient(ellipse 70% 60% at 50% 42%, rgba(229,130,92,.055), transparent 72%),
+    #131211;
   overflow: hidden;
+  box-shadow: 0 30px 70px -30px rgba(0,0,0,.7);
 }
 .jdiagram__grid {
   position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(240,238,230,.035) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(240,238,230,.035) 1px, transparent 1px);
-  background-size: 44px 44px;
+  background-image: linear-gradient(rgba(240,238,230,.028) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(240,238,230,.028) 1px, transparent 1px);
+  background-size: 38px 38px;
+  -webkit-mask-image: radial-gradient(ellipse 78% 70% at 50% 45%, #000 35%, transparent 100%);
+          mask-image: radial-gradient(ellipse 78% 70% at 50% 45%, #000 35%, transparent 100%);
 }
+
 .jnode {
-  position: absolute; transform: translate(-50%, -50%);
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  transition: opacity .4s var(--ease);
-  opacity: .4;
+  position: absolute; transform: translate(-50%, -50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  transition: opacity .45s var(--ease);
+  opacity: .32;
 }
 .jnode.is-on { opacity: 1; }
 .jnode__box {
-  width: 52px; height: 40px; border-radius: 9px;
-  border: 1px solid var(--term-border); background: #201E1C;
+  width: 64px; height: 48px; border-radius: 11px;
+  border: 1px solid #35302B; background: linear-gradient(#232120, #1B1918);
   display: grid; place-items: center;
-  font-family: var(--font-mono); font-size: 10px; color: var(--term-muted);
-  transition: border-color .4s var(--ease), box-shadow .4s var(--ease), color .4s var(--ease);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; color: #8B837A;
+  transition: border-color .45s var(--ease), box-shadow .45s var(--ease),
+              color .45s var(--ease), transform .45s var(--spring);
 }
 .jnode.is-on .jnode__box {
-  border-color: var(--term-accent); color: var(--term-accent);
-  box-shadow: 0 0 0 4px rgba(229,130,92,.10), 0 6px 22px -8px rgba(229,130,92,.5);
+  border-color: rgba(229,130,92,.85); color: var(--term-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(229,130,92,.2), 0 0 0 7px rgba(229,130,92,.055),
+              0 10px 30px -8px rgba(229,130,92,.42);
 }
 .jnode__label {
-  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--term-muted); white-space: nowrap;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .09em;
+  text-transform: uppercase; color: #6E665E; white-space: nowrap;
+  transition: color .45s var(--ease);
 }
-.jnode.is-on .jnode__label { color: var(--term-ink); }
+.jnode.is-on .jnode__label { color: #C9C1B7; }
 
-.jwire {
-  position: absolute; height: 1px; background: #332F2B; transform-origin: left center;
-  overflow: hidden;
-}
+/* wires: dim by default, with dashes flowing along the live path */
+.jwire { position: absolute; height: 2px; background: #26221F; transform-origin: left center; z-index: 1; border-radius: 2px; }
 .jwire::after {
-  content: ''; position: absolute; inset: 0; background: var(--term-accent);
-  transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease);
+  content: ''; position: absolute; inset: 0; border-radius: 2px; opacity: 0;
+  background: repeating-linear-gradient(90deg,
+    var(--term-accent) 0 7px, rgba(229,130,92,.14) 7px 16px);
+  transition: opacity .4s var(--ease);
 }
-.jwire.is-live::after { transform: scaleX(1); }
+.jwire.is-live::after { opacity: 1; animation: jflow .55s linear infinite; }
+@keyframes jflow { to { background-position-x: 16px; } }
 
 .jpacket {
-  position: absolute; width: 13px; height: 13px; border-radius: 3px; z-index: 4;
-  background: var(--term-accent); transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 5px rgba(229,130,92,.16), 0 0 22px 3px rgba(229,130,92,.45);
-  transition: left .85s var(--ease), top .85s var(--ease), opacity .3s;
+  position: absolute; width: 15px; height: 11px; border-radius: 3px; z-index: 4;
+  background: linear-gradient(#F3A183, var(--term-accent));
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 4px rgba(229,130,92,.14), 0 0 26px 5px rgba(229,130,92,.5);
+  transition: left .8s var(--ease), top .8s var(--ease);
   will-change: left, top;
 }
 .jping {
-  position: absolute; width: 13px; height: 13px; border-radius: 50%; z-index: 3;
-  border: 1px solid var(--term-accent); transform: translate(-50%, -50%);
+  position: absolute; width: 15px; height: 15px; border-radius: 50%; z-index: 3;
+  border: 1px solid rgba(229,130,92,.7); transform: translate(-50%, -50%);
   opacity: 0; pointer-events: none;
 }
-.jstage[data-beat="4"] .jping { animation: jping 1.6s var(--ease-out) infinite; }
+.jstage[data-beat="4"] .jping { animation: jping 1.8s var(--ease-out) infinite; }
 @keyframes jping {
-  from { opacity: .7; transform: translate(-50%, -50%) scale(1); }
-  to   { opacity: 0;   transform: translate(-50%, -50%) scale(11); }
+  from { opacity: .65; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 0;   transform: translate(-50%, -50%) scale(13); }
 }
 
-/* readouts inside the diagram */
+/* readout: a terminal line, not a big empty panel */
 .jread {
-  position: absolute; left: 14px; right: 14px; bottom: 14px;
-  border: 1px solid var(--term-border); border-radius: var(--radius-sm);
-  background: rgba(13,12,12,.82); backdrop-filter: blur(6px);
-  padding: 11px 13px; font-family: var(--font-mono); font-size: 11.5px;
-  color: var(--term-muted); line-height: 1.7; min-height: 62px;
+  position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 5;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.85;
+  color: #7E766D;
 }
 .jread b { color: var(--term-accent); font-weight: 500; }
 .jread .g { color: var(--term-green); }
-.jread__line { display: block; opacity: 0; transform: translateY(4px); transition: opacity .35s, transform .35s; }
+.jread__line {
+  display: block; opacity: 0; transform: translateY(4px);
+  transition: opacity .35s var(--ease), transform .35s var(--ease);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.jread__line::before { content: '│ '; color: #3B352F; }
 .jread__line.is-on { opacity: 1; transform: none; }
 
 /* header stack — bytes accumulating on the wire */
 .jstack {
-  position: absolute; top: 14px; left: 14px; right: 14px;
-  display: flex; gap: 4px; align-items: center; font-family: var(--font-mono); font-size: 9.5px;
+  position: absolute; top: 16px; left: 18px; right: 18px; z-index: 5;
+  display: flex; gap: 5px; align-items: center; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .04em;
 }
 .jstack i {
-  font-style: normal; padding: 4px 7px; border-radius: 5px; white-space: nowrap;
-  border: 1px solid var(--term-border); color: var(--term-muted); background: #201E1C;
-  opacity: 0; transform: translateX(-6px); transition: opacity .4s var(--ease), transform .4s var(--ease);
+  font-style: normal; padding: 5px 8px; border-radius: 6px; white-space: nowrap;
+  border: 1px solid #2E2A26; color: #756D65; background: #1A1817;
+  opacity: 0; transform: translateX(-5px) scale(.96);
+  transition: opacity .4s var(--ease), transform .4s var(--spring),
+              color .4s var(--ease), border-color .4s var(--ease);
 }
 .jstack i.is-on { opacity: 1; transform: none; }
-.jstack i.pay { color: var(--term-ink); border-color: #4A443E; }
-.jstack i.hdr { color: var(--term-accent); border-color: rgba(229,130,92,.32); }
+.jstack i.pay { color: #D8D0C6; border-color: #3E3831; }
+.jstack i.is-on.hdr { color: var(--term-accent); border-color: rgba(229,130,92,.34); }
+
+/* the nav goes dark while the journey is behind it */
+.nav.on-dark { background: rgba(19,18,17,.72); border-bottom-color: transparent; }
+.nav.on-dark .brand__name { color: #F5F1EA; }
+.nav.on-dark .brand__chip { color: #8B837A; border-color: #35302B; }
+.nav.on-dark .nav__link { color: #9A928A; }
+.nav.on-dark .nav__link:hover { color: #F5F1EA; background: rgba(255,255,255,.06); }
+.nav.on-dark .icon-btn { background: rgba(255,255,255,.04); border-color: #35302B; color: #9A928A; }
+.nav.on-dark .icon-btn:hover { color: #F5F1EA; }
 
 @media (max-width: 1024px) {
-  .journey__track { height: 520vh; }
-  .jstage { grid-template-columns: minmax(0, 1fr); gap: 26px; align-content: center; }
-  .jdiagram { aspect-ratio: 1 / .62; }
-  .jcopy__steps { min-height: 210px; }
+  .journey__track { height: 540vh; }
+  .jstage { grid-template-columns: minmax(0, 1fr); gap: 30px; align-content: center; min-height: 0; }
+  .jdiagram { height: min(48vh, 420px); }
+  .jcopy__steps { min-height: 232px; }
   .jstep p { font-size: 15.5px; }
 }
 @media (max-width: 640px) {
-  .journey__track { height: 480vh; }
-  .jstage { padding-top: 40px; padding-bottom: 40px; min-height: 0; }
-  .jdiagram { aspect-ratio: 1 / .8; }
-  .jnode__box { width: 44px; height: 36px; font-size: 12px; }
-  .jnode__label { font-size: 12px; letter-spacing: .04em; }
-  .scrollcue { font-size: 12px; }
-  .jstack { font-size: 12px; flex-wrap: wrap; }
-  .jread { font-size: 12px; }
+  .journey__track { height: 500vh; }
+  .jstage { padding-top: 44px; padding-bottom: 44px; gap: 24px; }
+  .jdiagram { height: min(46vh, 360px); }
+  .jnode__box { width: 52px; height: 40px; font-size: 12px; }
+  .jnode__label { font-size: 12px; letter-spacing: .03em; }
+  .jstack { font-size: 12px; gap: 4px; }
+  .jstack i { padding: 4px 7px; }
+  .jread { font-size: 12px; left: 14px; right: 14px; }
   .jcopy__eyebrow, .jstep__n { font-size: 12px; }
-  .jprog i { width: 18px; }
+  .jstep h3 { font-size: clamp(26px, 7vw, 34px); }
+  .jprog i { width: 20px; }
+  .scrollcue { font-size: 12px; }
 }
 
 /* Reduced motion / no JS: the whole thing becomes a readable stacked list. */
 .journey.is-static .journey__track { height: auto; }
 .journey.is-static .jstage {
-  position: static; height: auto; min-height: 0; display: block; padding-block: 72px;
+  position: static; height: auto; min-height: 0; display: block; padding-block: 76px;
 }
 .journey.is-static .jdiagram { display: none; }
 .journey.is-static .jcopy__steps { min-height: 0; }
 .journey.is-static .jstep {
-  position: static; opacity: 1; transform: none; pointer-events: auto;
-  padding: 22px 0; border-top: 1px solid var(--term-border);
+  position: static; opacity: 1; visibility: visible; transform: none; pointer-events: auto;
+  padding: 24px 0; border-top: 1px solid #2C2825;
 }
-.journey.is-static .jstep h3 { font-size: 26px; }
+.journey.is-static .jstep h3 { font-size: 27px; }
 .journey.is-static .jprog { display: none; }
 
 /* ============================================================
@@ -1038,54 +1074,54 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
         <span class="jcopy__eyebrow">One request, end to end</span>
         <div class="jcopy__steps">
           <article class="jstep is-on">
-            <span class="jstep__n">01 / 08 · your machine</span>
+            <span class="jstep__n"><b>01</b> / 08 · your machine</span>
             <h3>You press Enter.</h3>
             <p>The browser checks its own cache, then the OS resolver cache, then the hosts
                file. Nothing. So far not a single byte has left your laptop.</p>
             <p><code>example.com → ?</code></p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">02 / 08 · udp port 53</span>
+            <span class="jstep__n"><b>02</b> / 08 · udp port 53</span>
             <h3>A name becomes an address.</h3>
             <p>Your resolver asks a root server who handles <code>.com</code>, the TLD server
                who handles the domain, and finally the authoritative server for the answer.
                Three referrals, one A record.</p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">03 / 08 · layer 3</span>
+            <span class="jstep__n"><b>03</b> / 08 · layer 3</span>
             <h3>Is that address local?</h3>
             <p>Your machine ANDs the destination with your subnet mask and compares. Different
                network — so this packet cannot go direct. It has to go to the gateway.</p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">04 / 08 · layer 2</span>
+            <span class="jstep__n"><b>04</b> / 08 · layer 2</span>
             <h3>Who is the gateway?</h3>
             <p>To build the frame it needs the router's MAC address, so it shouts at the entire
                network and waits for one reply. Nothing about this exchange is authenticated —
                which is the root of most local attacks.</p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">05 / 08 · the router</span>
+            <span class="jstep__n"><b>05</b> / 08 · the router</span>
             <h3>Your address gets rewritten.</h3>
             <p>Thirty devices share one public address, so the router swaps your private source
                for its own and records the mapping. One line in a table is the only thing that
                knows the reply belongs to you.</p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">06 / 08 · the internet</span>
+            <span class="jstep__n"><b>06</b> / 08 · the internet</span>
             <h3>Hop after hop.</h3>
             <p>Every router reads the destination, consults its table, forwards, and decrements
                TTL by one. The MAC addresses are rewritten at every single hop. The IP addresses
                never change.</p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">07 / 08 · tcp + tls</span>
+            <span class="jstep__n"><b>07</b> / 08 · tcp + tls</span>
             <h3>Two handshakes, then secrecy.</h3>
             <p>SYN, SYN-ACK, ACK agrees sequence numbers. Then ClientHello, certificate and key
                exchange agree a session key. Only now can the actual request be sent.</p>
           </article>
           <article class="jstep">
-            <span class="jstep__n">08 / 08 · 40 milliseconds later</span>
+            <span class="jstep__n"><b>08</b> / 08 · 40 milliseconds later</span>
             <h3>The page arrives.</h3>
             <p>Encrypted HTML comes back and the browser starts painting. All of that — for one
                request, before a single image loads. Seven days from now you'll be able to watch
@@ -1112,24 +1148,24 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
         <span class="jwire" data-from="router" data-to="isp"></span>
         <span class="jwire" data-from="isp" data-to="server"></span>
 
-        <div class="jnode is-on" data-node="you" style="left:10%;top:38%">
+        <div class="jnode is-on" data-node="you" style="left:11%;top:33%">
           <span class="jnode__box">YOU</span><span class="jnode__label">192.168.1.24</span>
         </div>
-        <div class="jnode" data-node="router" style="left:36%;top:38%">
+        <div class="jnode" data-node="router" style="left:37%;top:33%">
           <span class="jnode__box">RTR</span><span class="jnode__label">gateway</span>
         </div>
-        <div class="jnode" data-node="resolver" style="left:36%;top:78%">
+        <div class="jnode" data-node="resolver" style="left:37%;top:63%">
           <span class="jnode__box">DNS</span><span class="jnode__label">resolver</span>
         </div>
-        <div class="jnode" data-node="isp" style="left:65%;top:38%">
+        <div class="jnode" data-node="isp" style="left:65%;top:33%">
           <span class="jnode__box">ISP</span><span class="jnode__label">hops</span>
         </div>
-        <div class="jnode" data-node="server" style="left:90%;top:38%">
+        <div class="jnode" data-node="server" style="left:89%;top:33%">
           <span class="jnode__box">SRV</span><span class="jnode__label">93.184.216.34</span>
         </div>
 
-        <span class="jping" id="jping" style="left:10%;top:38%"></span>
-        <span class="jpacket" id="jpacket" style="left:10%;top:38%"></span>
+        <span class="jping" id="jping" style="left:11%;top:33%"></span>
+        <span class="jpacket" id="jpacket" style="left:11%;top:33%"></span>
 
         <div class="jread" id="jread"></div>
       </div>
@@ -1554,28 +1590,19 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 
   /* ---------- Theme ---------- */
   var toggle = document.getElementById('themeToggle');
+  var themeTimer;
   function applyTheme(next) {
-    document.documentElement.setAttribute('data-theme', next);
+    var root = document.documentElement;
+    if (!reduced) {
+      root.classList.add('theming');
+      clearTimeout(themeTimer);
+      themeTimer = setTimeout(function () { root.classList.remove('theming'); }, 360);
+    }
+    root.setAttribute('data-theme', next);
     try { localStorage.setItem('packetpath.theme', next); } catch (e) {}
   }
   toggle.addEventListener('click', function () {
-    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-
-    // Circular wipe out of the button itself, where supported.
-    if (reduced || !document.startViewTransition) { applyTheme(next); return; }
-
-    var r = toggle.getBoundingClientRect();
-    var x = r.left + r.width / 2, y = r.top + r.height / 2;
-    var reach = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-
-    document.startViewTransition(function () { applyTheme(next); }).ready.then(function () {
-      document.documentElement.animate(
-        { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)',
-                     'circle(' + reach + 'px at ' + x + 'px ' + y + 'px)'] },
-        { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)',
-          pseudoElement: '::view-transition-new(root)' }
-      );
-    }).catch(function () { /* interrupted — theme already applied */ });
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   });
 
   /* ---------- fade the edge of anything that scrolls sideways ---------- */
@@ -1600,6 +1627,16 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  /* ---------- nav goes dark while the journey is behind it ---------- */
+  (function () {
+    var journey = document.getElementById('journey');
+    if (!journey || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (entries) {
+      nav.classList.toggle('on-dark', entries[0].isIntersecting);
+    }, { rootMargin: '-' + 0 + 'px 0px -' + (window.innerHeight - 66) + 'px 0px', threshold: 0 })
+      .observe(journey);
+  })();
 
   /* ---------- pointer-aware lighting on cards (desktop only) ---------- */
   if (!reduced && window.matchMedia('(hover: hover)').matches) {
@@ -1770,11 +1807,11 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
     }
 
     var POS = {
-      you:      [10, 38],
-      router:   [36, 38],
-      resolver: [36, 78],
-      isp:      [65, 38],
-      server:   [90, 38]
+      you:      [11, 33],
+      router:   [37, 33],
+      resolver: [37, 63],
+      isp:      [65, 33],
+      server:   [89, 33]
     };
 
     // beat: which nodes light up, where the packet sits, which wires are live,
