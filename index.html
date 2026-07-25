@@ -10,6 +10,13 @@
 <meta property="og:description" content="Seven days. Twenty-one labs. Zero paid tools. From the OSI model to capturing credentials off the wire and fixing the network that leaked them.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23C15F3C'/%3E%3Cg fill='none' stroke='%23FAF9F5' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M8 16h16M16 8v16'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='3' fill='%23FAF9F5'/%3E%3C/svg%3E">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" id="themeColor" content="#FAF9F5">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Packet Path">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
@@ -21,6 +28,8 @@
     var stored = localStorage.getItem('packetpath.theme');
     var theme = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-theme', theme);
+    var mtc = document.getElementById('themeColor');
+    if (mtc) mtc.setAttribute('content', theme === 'dark' ? '#141413' : '#FAF9F5');
   } catch (e) { /* localStorage blocked — keep the light default */ }
 })();
 </script>
@@ -985,6 +994,10 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
       <a class="nav__link" href="#faq">FAQ</a>
     </nav>
     <div class="nav__actions">
+      <button class="btn btn--ghost btn--sm" id="installBtn" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
+        Install
+      </button>
       <button class="icon-btn theme-toggle" id="themeToggle" type="button" aria-label="Toggle colour theme" title="Toggle theme">
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
           <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
@@ -1526,6 +1539,16 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
           Nothing expires, so a "day" can be a week if that's your pace.</p></div></div>
       </details>
       <details>
+        <summary>Can I install it on my phone?</summary>
+        <div class="faq__a"><div><p>Yes — it's a progressive web app, so it installs to your
+          home screen and then works with no connection at all. On <strong>Android and desktop
+          Chrome or Edge</strong>, an <em>Install</em> button appears in the header once the
+          browser is ready. On <strong>iPhone and iPad</strong> there's no install button —
+          Safari handles it through <em>Share → Add to Home Screen</em>. One iOS quirk worth
+          knowing: an installed app gets its own separate storage, so progress you saved in
+          Safari won't follow you into the installed version.</p></div></div>
+      </details>
+      <details>
         <summary>Where is my progress stored?</summary>
         <div class="faq__a"><div><p>In your browser's local storage, on your device only. There is no
           account, no server and no analytics. Clearing site data or using a
@@ -1615,6 +1638,52 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
   'use strict';
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+
+  /* ============================================================
+     PWA — service worker + install prompt
+     ============================================================ */
+  (function () {
+    // Relative path: the site is served from /Network1/, and this also keeps
+    // opening the file straight from disk working.
+    if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function () { /* offline support unavailable */ });
+      });
+    }
+
+    var installBtn = document.getElementById('installBtn');
+    if (!installBtn) return;
+
+    var deferred = null;
+    var standalone = function () {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true;
+    };
+
+    // Chromium fires this only when the install criteria are met.
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferred = e;
+      if (!standalone()) installBtn.hidden = false;
+    });
+
+    installBtn.addEventListener('click', function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.then(function () {
+        deferred = null;
+        installBtn.hidden = true;
+      });
+    });
+
+    window.addEventListener('appinstalled', function () {
+      deferred = null;
+      installBtn.hidden = true;
+    });
+
+    if (standalone()) installBtn.hidden = true;
+  })();
+
   /* ---------- Theme ---------- */
   var toggle = document.getElementById('themeToggle');
   var themeTimer;
@@ -1627,6 +1696,8 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
     }
     root.setAttribute('data-theme', next);
     try { localStorage.setItem('packetpath.theme', next); } catch (e) {}
+    var tc = document.getElementById('themeColor');
+    if (tc) tc.setAttribute('content', next === 'dark' ? '#141413' : '#FAF9F5');
   }
   toggle.addEventListener('click', function () {
     applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');

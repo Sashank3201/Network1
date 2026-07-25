@@ -10,6 +10,17 @@ Two HTML files, no build step, no dependencies, no accounts, no server.
 | `index.html` | Landing page — hero, curriculum, sample lesson, toolkit, FAQ |
 | `course.html` | The full course — 7 days, 21 labs, cheat sheet, final assessment |
 
+## Install it on your phone
+
+It's a progressive web app. Open the live site, and:
+
+- **Android / Chrome / Edge** — tap **Install** in the header (appears once the browser is ready).
+- **iPhone / iPad** — Safari has no install button; use **Share → Add to Home Screen**.
+
+Once installed it runs full-screen and works with **no connection at all** — a service worker
+caches both pages, the icons and the web fonts. Note that on iOS an installed app gets its own
+storage, so progress saved in Safari does not carry over into the installed version.
+
 ## Running it
 
 Open `index.html` in a browser. That's it.
