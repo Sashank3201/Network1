@@ -265,11 +265,61 @@ strong { color: var(--ink); font-weight: 600; }
 /* --- touch: no latched hover, real press feedback --- */
 a, button, summary { -webkit-tap-highlight-color: transparent; }
 @media (hover: none) {
-  .day-card:hover, .btn:hover, .icon-btn:hover, .tool:hover,
+  .irow:hover, .btn:hover, .icon-btn:hover, .tool:hover,
   .outcome:hover, .nav__link:hover, .tab:hover { transform: none; }
 }
 .btn:active, .icon-btn:active, .tab:active { transform: scale(.97); }
-.day-card:active, .tool:active, .outcome:active { transform: scale(.99); }
+
+/* --- heading line reveal: each line rises from behind a clip --- */
+.lines { display: block; }
+.lines .ln { display: block; overflow: hidden; padding-bottom: .08em; margin-bottom: -.08em; }
+.lines .ln > span {
+  display: block; transform: translateY(105%);
+  transition: transform .78s var(--ease-out); transition-delay: var(--lnd, 0ms);
+}
+.reveal.is-visible .lines .ln > span,
+.lines.is-visible .ln > span { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lines .ln > span { transform: none !important; transition: none !important; }
+}
+
+/* --- pointer-aware lighting: felt, not seen (desktop only) --- */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .lit { position: relative; }
+  .lit::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: 0;
+    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%),
+                                var(--accent-glow), transparent 62%);
+    opacity: 0; transition: opacity var(--dur) var(--ease); pointer-events: none;
+  }
+  .lit:hover::before { opacity: .55; }
+  .lit > * { position: relative; z-index: 1; }
+}
+
+/* --- hero scroll cue --- */
+.scrollcue {
+  position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 9px; z-index: 2;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-muted);
+  transition: opacity .4s var(--ease); pointer-events: none;
+}
+.scrollcue.is-gone { opacity: 0; }
+.scrollcue i {
+  display: block; width: 1px; height: 32px;
+  background: linear-gradient(var(--border-strong), transparent);
+  position: relative; overflow: hidden;
+}
+.scrollcue i::after {
+  content: ''; position: absolute; inset: 0; background: var(--accent);
+  animation: cue 2.1s var(--ease) infinite;
+}
+@keyframes cue {
+  0%   { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(100%); }
+}
+.tool:active, .outcome:active { transform: scale(.99); }
+.irow:active { background: var(--surface-2); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -386,6 +436,194 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 .stat__label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); }
 
 /* ============================================================
+   THE JOURNEY — one request, end to end
+   The single dark section on the page. Contrast works because it's rare.
+   ============================================================ */
+.journey { position: relative; background: var(--term-bg); color: var(--term-ink); }
+.journey::before,
+.journey::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 90px; pointer-events: none; z-index: 2;
+}
+.journey::before { top: 0; background: linear-gradient(var(--term-bg), transparent); }
+.journey::after { bottom: 0; background: linear-gradient(transparent, var(--term-bg)); }
+.journey__track { height: 560vh; }
+.jstage {
+  position: sticky; top: 0; height: 100vh; min-height: 560px;
+  display: grid; grid-template-columns: minmax(0, .86fr) minmax(0, 1.14fr);
+  gap: 48px; align-items: center;
+  max-width: var(--maxw); margin-inline: auto;
+  padding: 0 calc(24px + var(--safe-l)) 0 calc(24px + var(--safe-r));
+}
+
+/* --- left column: the narration --- */
+.jcopy { position: relative; z-index: 3; }
+.jcopy__eyebrow {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--term-accent); margin-bottom: 20px; display: block;
+}
+.jcopy__steps { position: relative; min-height: 260px; }
+.jstep {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden; transform: translateY(14px); pointer-events: none;
+  transition: opacity .38s var(--ease-out), transform .38s var(--ease-out), visibility 0s .38s;
+}
+.jstep.is-on {
+  opacity: 1; visibility: visible; transform: none; pointer-events: auto;
+  transition: opacity .38s var(--ease-out), transform .38s var(--ease-out), visibility 0s;
+}
+.jstep__n {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em;
+  color: var(--term-muted); display: block; margin-bottom: 12px;
+}
+.jstep h3 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(28px, 3.6vw, 42px); line-height: 1.08; letter-spacing: -.018em;
+  color: var(--term-ink); margin-bottom: 14px;
+}
+.jstep p { font-size: 16.5px; line-height: 1.62; color: #A8A197; max-width: 46ch; margin-bottom: 16px; }
+.jstep code {
+  font-family: var(--font-mono); font-size: 13px; color: var(--term-accent);
+  background: rgba(229,130,92,.11); border: 1px solid rgba(229,130,92,.22);
+  padding: 2px 7px; border-radius: 6px; white-space: pre-wrap;
+}
+.jprog { display: flex; gap: 5px; margin-top: 30px; }
+.jprog i {
+  width: 26px; height: 3px; border-radius: 2px; background: #3A3530;
+  transition: background-color .35s var(--ease), transform .35s var(--ease);
+  transform-origin: left;
+}
+.jprog i.is-on { background: var(--term-accent); }
+.jprog i.is-past { background: #6E5A4E; }
+
+/* --- right column: the diagram --- */
+.jdiagram {
+  position: relative; aspect-ratio: 1 / .78; width: 100%;
+  border: 1px solid var(--term-border); border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(229,130,92,.07), transparent 70%),
+    var(--term-bg-2);
+  overflow: hidden;
+}
+.jdiagram__grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(240,238,230,.035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(240,238,230,.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.jnode {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  transition: opacity .4s var(--ease);
+  opacity: .4;
+}
+.jnode.is-on { opacity: 1; }
+.jnode__box {
+  width: 52px; height: 40px; border-radius: 9px;
+  border: 1px solid var(--term-border); background: #201E1C;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 10px; color: var(--term-muted);
+  transition: border-color .4s var(--ease), box-shadow .4s var(--ease), color .4s var(--ease);
+}
+.jnode.is-on .jnode__box {
+  border-color: var(--term-accent); color: var(--term-accent);
+  box-shadow: 0 0 0 4px rgba(229,130,92,.10), 0 6px 22px -8px rgba(229,130,92,.5);
+}
+.jnode__label {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--term-muted); white-space: nowrap;
+}
+.jnode.is-on .jnode__label { color: var(--term-ink); }
+
+.jwire {
+  position: absolute; height: 1px; background: #332F2B; transform-origin: left center;
+  overflow: hidden;
+}
+.jwire::after {
+  content: ''; position: absolute; inset: 0; background: var(--term-accent);
+  transform: scaleX(0); transform-origin: left; transition: transform .6s var(--ease);
+}
+.jwire.is-live::after { transform: scaleX(1); }
+
+.jpacket {
+  position: absolute; width: 13px; height: 13px; border-radius: 3px; z-index: 4;
+  background: var(--term-accent); transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 5px rgba(229,130,92,.16), 0 0 22px 3px rgba(229,130,92,.45);
+  transition: left .85s var(--ease), top .85s var(--ease), opacity .3s;
+  will-change: left, top;
+}
+.jping {
+  position: absolute; width: 13px; height: 13px; border-radius: 50%; z-index: 3;
+  border: 1px solid var(--term-accent); transform: translate(-50%, -50%);
+  opacity: 0; pointer-events: none;
+}
+.jstage[data-beat="4"] .jping { animation: jping 1.6s var(--ease-out) infinite; }
+@keyframes jping {
+  from { opacity: .7; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 0;   transform: translate(-50%, -50%) scale(11); }
+}
+
+/* readouts inside the diagram */
+.jread {
+  position: absolute; left: 14px; right: 14px; bottom: 14px;
+  border: 1px solid var(--term-border); border-radius: var(--radius-sm);
+  background: rgba(13,12,12,.82); backdrop-filter: blur(6px);
+  padding: 11px 13px; font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--term-muted); line-height: 1.7; min-height: 62px;
+}
+.jread b { color: var(--term-accent); font-weight: 500; }
+.jread .g { color: var(--term-green); }
+.jread__line { display: block; opacity: 0; transform: translateY(4px); transition: opacity .35s, transform .35s; }
+.jread__line.is-on { opacity: 1; transform: none; }
+
+/* header stack — bytes accumulating on the wire */
+.jstack {
+  position: absolute; top: 14px; left: 14px; right: 14px;
+  display: flex; gap: 4px; align-items: center; font-family: var(--font-mono); font-size: 9.5px;
+}
+.jstack i {
+  font-style: normal; padding: 4px 7px; border-radius: 5px; white-space: nowrap;
+  border: 1px solid var(--term-border); color: var(--term-muted); background: #201E1C;
+  opacity: 0; transform: translateX(-6px); transition: opacity .4s var(--ease), transform .4s var(--ease);
+}
+.jstack i.is-on { opacity: 1; transform: none; }
+.jstack i.pay { color: var(--term-ink); border-color: #4A443E; }
+.jstack i.hdr { color: var(--term-accent); border-color: rgba(229,130,92,.32); }
+
+@media (max-width: 1024px) {
+  .journey__track { height: 520vh; }
+  .jstage { grid-template-columns: minmax(0, 1fr); gap: 26px; align-content: center; }
+  .jdiagram { aspect-ratio: 1 / .62; }
+  .jcopy__steps { min-height: 210px; }
+  .jstep p { font-size: 15.5px; }
+}
+@media (max-width: 640px) {
+  .journey__track { height: 480vh; }
+  .jstage { padding-top: 40px; padding-bottom: 40px; min-height: 0; }
+  .jdiagram { aspect-ratio: 1 / .8; }
+  .jnode__box { width: 44px; height: 36px; font-size: 12px; }
+  .jnode__label { font-size: 12px; letter-spacing: .04em; }
+  .scrollcue { font-size: 12px; }
+  .jstack { font-size: 12px; flex-wrap: wrap; }
+  .jread { font-size: 12px; }
+  .jcopy__eyebrow, .jstep__n { font-size: 12px; }
+  .jprog i { width: 18px; }
+}
+
+/* Reduced motion / no JS: the whole thing becomes a readable stacked list. */
+.journey.is-static .journey__track { height: auto; }
+.journey.is-static .jstage {
+  position: static; height: auto; min-height: 0; display: block; padding-block: 72px;
+}
+.journey.is-static .jdiagram { display: none; }
+.journey.is-static .jcopy__steps { min-height: 0; }
+.journey.is-static .jstep {
+  position: static; opacity: 1; transform: none; pointer-events: auto;
+  padding: 22px 0; border-top: 1px solid var(--term-border);
+}
+.journey.is-static .jstep h3 { font-size: 26px; }
+.journey.is-static .jprog { display: none; }
+
+/* ============================================================
    SECTIONS
    ============================================================ */
 .section { padding: 92px 0; }
@@ -400,48 +638,83 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 .section__head p { font-size: 17px; color: var(--ink-muted); }
 
 /* ============================================================
-   CURRICULUM
+   CURRICULUM — an editorial index, not a third card grid
    ============================================================ */
+.index { border-top: 1px solid var(--border); }
+.irow {
+  position: relative; display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, .8fr);
+  gap: 32px; align-items: start;
+  padding: 30px 8px 30px 0; border-bottom: 1px solid var(--border);
+  text-decoration: none; color: inherit;
+  transition: background-color var(--dur) var(--ease), padding-left var(--dur) var(--ease);
+}
+.irow::before {
+  content: ''; position: absolute; left: 0; top: -1px; height: 1px; width: 0;
+  background: var(--accent); transition: width var(--dur-slow) var(--ease);
+}
+.irow__num {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 44px; line-height: .9; letter-spacing: -.03em;
+  color: var(--border-strong);
+  transition: color var(--dur) var(--ease);
+}
+.irow__main h3 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(24px, 2.5vw, 31px); line-height: 1.12; letter-spacing: -.014em;
+  margin-bottom: 9px;
+  transition: color var(--dur) var(--ease);
+}
+.irow__main p { font-size: 15.4px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 14px; max-width: 46ch; }
+.irow__side { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; }
+.irow__meta {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em;
+  color: var(--ink-muted); display: flex; gap: 10px; align-items: center;
+}
+.irow__lab { display: flex; gap: 9px; align-items: baseline; font-size: 13.6px; color: var(--ink-2); line-height: 1.5; }
+.irow__go {
+  position: absolute; right: 8px; bottom: 30px;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--border); display: grid; place-items: center;
+  color: var(--ink-muted); opacity: 0;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease),
+              border-color var(--dur), color var(--dur);
+  transform: translateX(-6px);
+}
+.irow__go svg { width: 13px; height: 13px; }
+@media (hover: hover) {
+  .irow:hover { background: var(--surface); padding-left: 16px; }
+  .irow:hover::before { width: 100%; }
+  .irow:hover .irow__num { color: var(--accent); }
+  .irow:hover .irow__main h3 { color: var(--accent); }
+  .irow:hover .irow__go { opacity: 1; transform: none; border-color: var(--accent); color: var(--accent); }
+}
+.irow:focus-visible { background: var(--surface); }
+.irow--capstone .irow__num { color: var(--accent); }
+
+@media (max-width: 900px) {
+  .irow { grid-template-columns: 62px minmax(0, 1fr); gap: 18px; padding: 26px 0; }
+  .irow__num { font-size: 32px; }
+  .irow__side { grid-column: 2; }
+  .irow__go { display: none; }
+  .irow:hover { padding-left: 0; }
+}
+
 .days { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
-.day-card {
-  position: relative; display: flex; flex-direction: column;
-  padding: 26px 26px 24px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  box-shadow: var(--shadow-sm); overflow: hidden;
-  transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
-}
-.day-card::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit;
-  box-shadow: inset 0 0 0 1px transparent, 0 0 0 4px transparent;
-  transition: box-shadow .3s var(--ease); pointer-events: none;
-}
-.day-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 46%, var(--border)); box-shadow: var(--shadow-md); }
-.day-card:hover::after { box-shadow: inset 0 0 0 1px var(--accent-ring), 0 0 0 4px var(--accent-glow); }
-.day-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.day-card__num {
-  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-  letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
-}
-.day-card__time { font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); }
-.day-card h3 { font-family: var(--font-display); font-weight: 400; font-size: 25px; line-height: 1.18; margin-bottom: 10px; letter-spacing: -.012em; }
-.day-card p { font-size: 14.8px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 18px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .03em;
   padding: 4px 9px; border-radius: 6px;
   background: var(--surface-2); color: var(--ink-muted);
   border: 1px solid var(--border);
+  transition: border-color var(--dur-fast), color var(--dur-fast);
 }
-.day-card__lab {
-  margin-top: auto; padding-top: 15px; border-top: 1px dashed var(--border-strong);
-  display: flex; align-items: baseline; gap: 9px; font-size: 13.5px; color: var(--ink-2);
-}
-.day-card__lab .tag {
+@media (hover: hover) { .irow:hover .chip { border-color: var(--border-strong); color: var(--ink-2); } }
+.irow__lab .tag {
   font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
   color: var(--accent); background: var(--accent-soft); border-radius: 5px;
   padding: 3px 6px; flex-shrink: 0;
 }
-.day-card--capstone { background: linear-gradient(160deg, var(--accent-soft) 0%, var(--surface) 58%); }
 
 /* ============================================================
    SAMPLE LESSON (tabs)
@@ -573,12 +846,34 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 .cta-band h2 { font-family: var(--font-display); font-weight: 400; font-size: clamp(33px, 4.6vw, 52px); line-height: 1.08; letter-spacing: -.02em; margin: 16px auto 18px; max-width: 18ch; }
 .cta-band p { font-size: 17.5px; color: var(--ink-muted); max-width: 52ch; margin: 0 auto 30px; }
 
-.footer { border-top: 1px solid var(--border); padding: 40px 0; background: var(--bg-alt); }
-.footer__inner { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
-.footer p { font-size: 13.5px; color: var(--ink-muted); }
-.footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
-.footer nav a { font-size: 13.5px; color: var(--ink-muted); transition: color .2s; }
-.footer nav a:hover { color: var(--accent); }
+.footer { border-top: 1px solid var(--border); padding: 64px 0 40px; background: var(--bg-alt); }
+.footer__top {
+  display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 40px; padding-bottom: 40px; border-bottom: 1px solid var(--border);
+}
+.footer__brand .brand { margin-bottom: 14px; }
+.footer__brand p { font-size: 14.5px; color: var(--ink-muted); max-width: 34ch; line-height: 1.6; }
+.footer__col h4 {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-muted); font-weight: 500; margin-bottom: 14px;
+}
+.footer__col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.footer__col a { font-size: 14.5px; color: var(--ink-2); transition: color var(--dur-fast); }
+.footer__col a:hover { color: var(--accent); }
+.footer__bottom {
+  display: flex; flex-wrap: wrap; gap: 12px 24px;
+  align-items: center; justify-content: space-between; padding-top: 26px;
+}
+.footer__bottom p { font-size: 13px; color: var(--ink-muted); }
+.footer__bottom .mono { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .04em; }
+@media (max-width: 860px) {
+  .footer__top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+  .footer__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .footer__col h4, .footer__bottom p, .footer__bottom .mono { font-size: 12px; }
+  .footer__col a { display: inline-block; padding: 6px 8px 6px 0; min-width: 44px; min-height: 44px; line-height: 32px; }
+}
 
 /* ============================================================
    RESPONSIVE
@@ -622,8 +917,8 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   .faq summary { padding-top: 20px; padding-bottom: 20px; }
 
   /* type floor */
-  .eyebrow, .chip, .day-card__num, .day-card__time, .tool__meta,
-  .day-card__lab .tag, .brand__chip, .stat__label, .hero__meta,
+  .eyebrow, .chip, .irow__meta, .irow__lab, .tool__meta,
+  .irow__lab .tag, .brand__chip, .stat__label, .hero__meta,
   .tab__label, .footer p, .footer nav a, .term__title { font-size: 12px; }
   .icode, .panel code { font-size: 12.2px; }
 
@@ -691,7 +986,7 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
         <span class="badge"><span class="badge__dot"></span> Free · No signup · Runs offline</span>
         <span class="badge">For absolute beginners</span>
       </div>
-      <h1 class="reveal" style="--delay:70ms">Learn how networks actually work.<br>Then learn how they <em>break</em>.</h1>
+      <h1 class="reveal" style="--delay:70ms"><span class="lines"><span class="ln"><span style="--lnd:0ms">Learn how networks</span></span><span class="ln"><span style="--lnd:70ms">actually work.</span></span><span class="ln"><span style="--lnd:140ms">Then learn how they <em>break</em>.</span></span></span></h1>
       <p class="hero__deck reveal" style="--delay:140ms">
         A seven-day, hands-on networking course built for people going into
         cybersecurity. Every day pairs tight theory with a lab you run yourself —
@@ -707,6 +1002,7 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
       <div class="hero__meta reveal" style="--delay:280ms">
         <span>7 days</span><span>21 labs</span><span>0 paid tools</span><span>1 capstone</span>
       </div>
+      <div class="scrollcue" id="scrollcue" aria-hidden="true"><span>scroll</span><i></i></div>
     </div>
 
     <div class="reveal" style="--delay:200ms">
@@ -733,72 +1029,223 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   </div>
 </section>
 
+<!-- ========================= THE JOURNEY ========================= -->
+<section class="journey" id="journey" aria-label="What happens when you press Enter">
+  <div class="journey__track">
+    <div class="jstage" id="jstage" data-beat="1">
+
+      <div class="jcopy">
+        <span class="jcopy__eyebrow">One request, end to end</span>
+        <div class="jcopy__steps">
+          <article class="jstep is-on">
+            <span class="jstep__n">01 / 08 · your machine</span>
+            <h3>You press Enter.</h3>
+            <p>The browser checks its own cache, then the OS resolver cache, then the hosts
+               file. Nothing. So far not a single byte has left your laptop.</p>
+            <p><code>example.com → ?</code></p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">02 / 08 · udp port 53</span>
+            <h3>A name becomes an address.</h3>
+            <p>Your resolver asks a root server who handles <code>.com</code>, the TLD server
+               who handles the domain, and finally the authoritative server for the answer.
+               Three referrals, one A record.</p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">03 / 08 · layer 3</span>
+            <h3>Is that address local?</h3>
+            <p>Your machine ANDs the destination with your subnet mask and compares. Different
+               network — so this packet cannot go direct. It has to go to the gateway.</p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">04 / 08 · layer 2</span>
+            <h3>Who is the gateway?</h3>
+            <p>To build the frame it needs the router's MAC address, so it shouts at the entire
+               network and waits for one reply. Nothing about this exchange is authenticated —
+               which is the root of most local attacks.</p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">05 / 08 · the router</span>
+            <h3>Your address gets rewritten.</h3>
+            <p>Thirty devices share one public address, so the router swaps your private source
+               for its own and records the mapping. One line in a table is the only thing that
+               knows the reply belongs to you.</p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">06 / 08 · the internet</span>
+            <h3>Hop after hop.</h3>
+            <p>Every router reads the destination, consults its table, forwards, and decrements
+               TTL by one. The MAC addresses are rewritten at every single hop. The IP addresses
+               never change.</p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">07 / 08 · tcp + tls</span>
+            <h3>Two handshakes, then secrecy.</h3>
+            <p>SYN, SYN-ACK, ACK agrees sequence numbers. Then ClientHello, certificate and key
+               exchange agree a session key. Only now can the actual request be sent.</p>
+          </article>
+          <article class="jstep">
+            <span class="jstep__n">08 / 08 · 40 milliseconds later</span>
+            <h3>The page arrives.</h3>
+            <p>Encrypted HTML comes back and the browser starts painting. All of that — for one
+               request, before a single image loads. Seven days from now you'll be able to watch
+               every step of it in Wireshark.</p>
+          </article>
+        </div>
+        <div class="jprog" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+
+      <div class="jdiagram" aria-hidden="true">
+        <div class="jdiagram__grid"></div>
+
+        <div class="jstack">
+          <i class="pay">HTTP data</i>
+          <i class="hdr">+ TCP 20B</i>
+          <i class="hdr">+ IP 20B</i>
+          <i class="hdr">+ Ethernet 14B</i>
+        </div>
+
+        <span class="jwire" data-from="you" data-to="router"></span>
+        <span class="jwire" data-from="router" data-to="resolver"></span>
+        <span class="jwire" data-from="router" data-to="isp"></span>
+        <span class="jwire" data-from="isp" data-to="server"></span>
+
+        <div class="jnode is-on" data-node="you" style="left:10%;top:38%">
+          <span class="jnode__box">YOU</span><span class="jnode__label">192.168.1.24</span>
+        </div>
+        <div class="jnode" data-node="router" style="left:36%;top:38%">
+          <span class="jnode__box">RTR</span><span class="jnode__label">gateway</span>
+        </div>
+        <div class="jnode" data-node="resolver" style="left:36%;top:78%">
+          <span class="jnode__box">DNS</span><span class="jnode__label">resolver</span>
+        </div>
+        <div class="jnode" data-node="isp" style="left:65%;top:38%">
+          <span class="jnode__box">ISP</span><span class="jnode__label">hops</span>
+        </div>
+        <div class="jnode" data-node="server" style="left:90%;top:38%">
+          <span class="jnode__box">SRV</span><span class="jnode__label">93.184.216.34</span>
+        </div>
+
+        <span class="jping" id="jping" style="left:10%;top:38%"></span>
+        <span class="jpacket" id="jpacket" style="left:10%;top:38%"></span>
+
+        <div class="jread" id="jread"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- ========================= CURRICULUM ========================= -->
 <section class="section" id="curriculum">
   <div class="wrap">
     <div class="section__head reveal">
       <span class="eyebrow">The curriculum</span>
-      <h2>Seven days, from first packet to fixing a broken network</h2>
+      <h2><span class="lines"><span class="ln"><span style="--lnd:0ms">Seven days, from first packet</span></span><span class="ln"><span style="--lnd:70ms">to fixing a broken network</span></span></span></h2>
       <p>Each day is roughly ninety minutes: read the theory, run the lab, then read
          the callout that explains why an attacker or defender cares. Days build on
          each other — Day 7 assumes everything before it.</p>
     </div>
 
-    <div class="days">
-      <a class="day-card reveal" href="course.html#day-1">
-        <div class="day-card__top"><span class="day-card__num">Day 01</span><span class="day-card__time">~90 min</span></div>
-        <h3>Networking fundamentals</h3>
-        <p>The OSI and TCP/IP models, how data is encapsulated, IPv4 addressing, and subnetting you can do on paper.</p>
-        <div class="chips"><span class="chip">OSI model</span><span class="chip">TCP/IP stack</span><span class="chip">CIDR</span><span class="chip">Subnetting</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>Map your own machine's address, mask and gateway — then subnet it by hand.</span></div>
+    <div class="index">
+      <a class="irow reveal" href="course.html#day-1" style="--delay:0ms">
+        <span class="irow__num">01</span>
+        <span class="irow__main">
+          <h3>Networking fundamentals</h3>
+          <p>The OSI and TCP/IP models, how data is encapsulated, IPv4 addressing, and subnetting you can do on paper.</p>
+          <span class="chips"><span class="chip">OSI model</span><span class="chip">TCP/IP stack</span><span class="chip">CIDR</span><span class="chip">Subnetting</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 01 <span aria-hidden="true">·</span> ~90 min</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>Map your own machine's address, mask and gateway — then subnet it by hand.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="day-card reveal" href="course.html#day-2" style="--delay:60ms">
-        <div class="day-card__top"><span class="day-card__num">Day 02</span><span class="day-card__time">~90 min</span></div>
-        <h3>Devices &amp; topology</h3>
-        <p>Hubs, switches and routers; MAC addresses and ARP; how NAT hides a whole network behind one address; DHCP's four-step dance.</p>
-        <div class="chips"><span class="chip">Switching</span><span class="chip">ARP</span><span class="chip">NAT/PAT</span><span class="chip">DHCP</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>Watch your ARP cache fill in real time, then build a routed network in Packet Tracer.</span></div>
+      <a class="irow reveal" href="course.html#day-2" style="--delay:45ms">
+        <span class="irow__num">02</span>
+        <span class="irow__main">
+          <h3>Devices &amp; topology</h3>
+          <p>Hubs, switches and routers; MAC addresses and ARP; how NAT hides a whole network behind one address; DHCP's four-step dance.</p>
+          <span class="chips"><span class="chip">Switching</span><span class="chip">ARP</span><span class="chip">NAT/PAT</span><span class="chip">DHCP</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 02 <span aria-hidden="true">·</span> ~90 min</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>Watch your ARP cache fill in real time, then build a routed network in Packet Tracer.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="day-card reveal" href="course.html#day-3" style="--delay:120ms">
-        <div class="day-card__top"><span class="day-card__num">Day 03</span><span class="day-card__time">~90 min</span></div>
-        <h3>Core protocols &amp; ports</h3>
-        <p>TCP versus UDP, the three-way handshake byte by byte, connection states, and the ports every analyst knows by heart.</p>
-        <div class="chips"><span class="chip">TCP/UDP</span><span class="chip">Handshake</span><span class="chip">Ports</span><span class="chip">Sockets</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>List every listening port on your box, then capture a real SYN / SYN-ACK / ACK.</span></div>
+      <a class="irow reveal" href="course.html#day-3" style="--delay:90ms">
+        <span class="irow__num">03</span>
+        <span class="irow__main">
+          <h3>Core protocols &amp; ports</h3>
+          <p>TCP versus UDP, the three-way handshake byte by byte, connection states, and the ports every analyst knows by heart.</p>
+          <span class="chips"><span class="chip">TCP/UDP</span><span class="chip">Handshake</span><span class="chip">Ports</span><span class="chip">Sockets</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 03 <span aria-hidden="true">·</span> ~90 min</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>List every listening port on your box, then capture a real SYN / SYN-ACK / ACK.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="day-card reveal" href="course.html#day-4" style="--delay:180ms">
-        <div class="day-card__top"><span class="day-card__num">Day 04</span><span class="day-card__time">~100 min</span></div>
-        <h3>DNS, HTTP &amp; HTTPS</h3>
-        <p>How a name becomes an address, what TLS actually negotiates, and the complete packet flow behind pressing Enter on a URL.</p>
-        <div class="chips"><span class="chip">DNS records</span><span class="chip">HTTP</span><span class="chip">TLS</span><span class="chip">Packet flow</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>Trace a lookup from root to answer with <code class="icode">dig +trace</code>, then read the TLS handshake in DevTools.</span></div>
+      <a class="irow reveal" href="course.html#day-4" style="--delay:135ms">
+        <span class="irow__num">04</span>
+        <span class="irow__main">
+          <h3>DNS, HTTP &amp; HTTPS</h3>
+          <p>How a name becomes an address, what TLS actually negotiates, and the complete packet flow behind pressing Enter on a URL.</p>
+          <span class="chips"><span class="chip">DNS records</span><span class="chip">HTTP</span><span class="chip">TLS</span><span class="chip">Packet flow</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 04 <span aria-hidden="true">·</span> ~100 min</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>Trace a lookup from root to answer with <code class="icode">dig +trace</code>, then read the TLS handshake in DevTools.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="day-card reveal" href="course.html#day-5" style="--delay:240ms">
-        <div class="day-card__top"><span class="day-card__num">Day 05</span><span class="day-card__time">~100 min</span></div>
-        <h3>Network security basics</h3>
-        <p>Firewalls, VPNs and IDS/IPS — plus the attacks they exist to stop: MITM, ARP and DNS spoofing, sniffing, and hijacking.</p>
-        <div class="chips"><span class="chip">Firewalls</span><span class="chip">VPN</span><span class="chip">IDS/IPS</span><span class="chip">MITM</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>Read your host firewall's real rules, decompose a Snort signature, then write a router ACL.</span></div>
+      <a class="irow reveal" href="course.html#day-5" style="--delay:180ms">
+        <span class="irow__num">05</span>
+        <span class="irow__main">
+          <h3>Network security basics</h3>
+          <p>Firewalls, VPNs and IDS/IPS — plus the attacks they exist to stop: MITM, ARP and DNS spoofing, sniffing, and hijacking.</p>
+          <span class="chips"><span class="chip">Firewalls</span><span class="chip">VPN</span><span class="chip">IDS/IPS</span><span class="chip">MITM</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 05 <span aria-hidden="true">·</span> ~100 min</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>Read your host firewall's real rules, decompose a Snort signature, then write a router ACL.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="day-card reveal" href="course.html#day-6" style="--delay:300ms">
-        <div class="day-card__top"><span class="day-card__num">Day 06</span><span class="day-card__time">~110 min</span></div>
-        <h3>Traffic analysis with Wireshark</h3>
-        <p>Capture filters versus display filters, following a stream, the Statistics menu, and a repeatable method for triaging any capture.</p>
-        <div class="chips"><span class="chip">Wireshark</span><span class="chip">Display filters</span><span class="chip">tshark</span><span class="chip">pcap triage</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>See a plaintext login in a stream, then watch the same site over HTTPS give you nothing.</span></div>
+      <a class="irow reveal" href="course.html#day-6" style="--delay:225ms">
+        <span class="irow__num">06</span>
+        <span class="irow__main">
+          <h3>Traffic analysis with Wireshark</h3>
+          <p>Capture filters versus display filters, following a stream, the Statistics menu, and a repeatable method for triaging any capture.</p>
+          <span class="chips"><span class="chip">Wireshark</span><span class="chip">Display filters</span><span class="chip">tshark</span><span class="chip">pcap triage</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 06 <span aria-hidden="true">·</span> ~110 min</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>See a plaintext login in a stream, then watch the same site over HTTPS give you nothing.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="day-card day-card--capstone reveal" href="course.html#day-7" style="--delay:360ms">
-        <div class="day-card__top"><span class="day-card__num">Day 07 · Capstone</span><span class="day-card__time">~2.5 hrs</span></div>
-        <h3>Build it, break it, fix it</h3>
-        <p>Design a three-subnet office network, find six planted weaknesses, prove one is exploitable, harden every one, and write the report.</p>
-        <div class="chips"><span class="chip">Design</span><span class="chip">Assessment</span><span class="chip">Hardening</span><span class="chip">Reporting</span></div>
-        <div class="day-card__lab"><span class="tag">LAB</span><span>A full build-assess-remediate cycle in Packet Tracer, ending in a one-page findings report.</span></div>
+      <a class="irow reveal irow--capstone" href="course.html#day-7" style="--delay:270ms">
+        <span class="irow__num">07</span>
+        <span class="irow__main">
+          <h3>Build it, break it, fix it</h3>
+          <p>Design a three-subnet office network, find six planted weaknesses, prove one is exploitable, harden every one, and write the report.</p>
+          <span class="chips"><span class="chip">Design</span><span class="chip">Assessment</span><span class="chip">Hardening</span><span class="chip">Reporting</span></span>
+        </span>
+        <span class="irow__side">
+          <span class="irow__meta">Day 07 · Capstone <span aria-hidden="true">·</span> ~2.5 hrs</span>
+          <span class="irow__lab"><span class="tag">LAB</span><span>A full build-assess-remediate cycle in Packet Tracer, ending in a one-page findings report.</span></span>
+        </span>
+        <span class="irow__go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
     </div>
   </div>
@@ -809,7 +1256,7 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   <div class="wrap">
     <div class="section__head reveal">
       <span class="eyebrow">Inside a day</span>
-      <h2>Every day has the same three moves</h2>
+      <h2><span class="lines"><span class="ln"><span style="--lnd:0ms">Every day has the</span></span><span class="ln"><span style="--lnd:70ms">same three moves</span></span></span></h2>
       <p>Theory that fits on one screen. A lab you actually run. Then a plain-English
          reason it matters to a security professional. Here's the real Day 3.</p>
     </div>
@@ -906,26 +1353,26 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   <div class="wrap">
     <div class="section__head reveal">
       <span class="eyebrow">Outcomes</span>
-      <h2>What you can do by Sunday night</h2>
+      <h2><span class="lines"><span class="ln"><span style="--lnd:0ms">What you can do</span></span><span class="ln"><span style="--lnd:70ms">by Sunday night</span></span></span></h2>
       <p>Not "familiarity with networking concepts" — specific things you can sit down and do.</p>
     </div>
     <div class="outcomes">
-      <div class="outcome reveal">
+      <div class="outcome lit reveal">
         <span class="outcome__idx">01</span>
         <h3>Subnet without a calculator</h3>
         <p>Split a network into the right number of subnets, size each one, and know instantly whether two addresses can talk directly.</p>
       </div>
-      <div class="outcome reveal" style="--delay:70ms">
+      <div class="outcome lit reveal" style="--delay:70ms">
         <span class="outcome__idx">02</span>
         <h3>Read a packet capture</h3>
         <p>Open an unfamiliar pcap and answer: who talked to whom, over what, was it encrypted, and does anything look wrong.</p>
       </div>
-      <div class="outcome reveal" style="--delay:140ms">
+      <div class="outcome lit reveal" style="--delay:140ms">
         <span class="outcome__idx">03</span>
         <h3>Recognise an attack in traffic</h3>
         <p>Spot ARP spoofing, a port scan, DNS tampering and cleartext credential theft by their signatures on the wire.</p>
       </div>
-      <div class="outcome reveal" style="--delay:210ms">
+      <div class="outcome lit reveal" style="--delay:210ms">
         <span class="outcome__idx">04</span>
         <h3>Harden a network you built</h3>
         <p>Apply ACLs, port security, DHCP snooping and encrypted management — then verify each fix actually took effect.</p>
@@ -939,36 +1386,36 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
   <div class="wrap">
     <div class="section__head reveal">
       <span class="eyebrow">The toolkit</span>
-      <h2>Everything you need is free</h2>
+      <h2><span class="lines"><span class="ln"><span style="--lnd:0ms">Everything you need is free</span></span></span></h2>
       <p>No lab subscription, no cloud credits, no hardware. If your laptop can run a
          browser, it can run this course.</p>
     </div>
     <div class="tools">
-      <div class="tool reveal">
+      <div class="tool lit reveal">
         <div class="tool__glyph">▤</div>
         <h3>Wireshark</h3>
         <p>The packet analyser used in every SOC on earth. Days 3, 4, 6 and 7 live here.</p>
         <div class="tool__meta"><span><b>Free</b> · open source</span><span>Win · macOS · Linux</span></div>
       </div>
-      <div class="tool reveal" style="--delay:70ms">
+      <div class="tool lit reveal" style="--delay:70ms">
         <div class="tool__glyph">⌗</div>
         <h3>Cisco Packet Tracer</h3>
         <p>Build routers, switches and servers in software. Free with a Networking Academy account; GNS3 works as a drop-in alternative.</p>
         <div class="tool__meta"><span><b>Free</b> tier</span><span>Win · macOS · Linux</span></div>
       </div>
-      <div class="tool reveal" style="--delay:140ms">
+      <div class="tool lit reveal" style="--delay:140ms">
         <div class="tool__glyph">$_</div>
         <h3>Your terminal</h3>
         <p><code class="icode">ping</code>, <code class="icode">traceroute</code>, <code class="icode">nslookup</code>, <code class="icode">dig</code>, <code class="icode">netstat</code>, <code class="icode">ss</code>, <code class="icode">arp</code>, <code class="icode">curl</code>. Already installed.</p>
         <div class="tool__meta"><span><b>Built in</b></span><span>Every OS</span></div>
       </div>
-      <div class="tool reveal" style="--delay:210ms">
+      <div class="tool lit reveal" style="--delay:210ms">
         <div class="tool__glyph">&lt;/&gt;</div>
         <h3>Browser DevTools</h3>
         <p>The Network tab is a protocol analyser you already have. Day 4 uses it to read real HTTP and TLS.</p>
         <div class="tool__meta"><span><b>Built in</b></span><span>Chrome · Firefox · Edge · Safari</span></div>
       </div>
-      <div class="tool reveal" style="--delay:280ms">
+      <div class="tool lit reveal" style="--delay:280ms">
         <div class="tool__glyph">◈</div>
         <h3>This page</h3>
         <p>The course is one HTML file. Save it, open it offline, and your progress stays on your machine.</p>
@@ -1037,7 +1484,7 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 <section class="cta-band">
   <div class="wrap cta-band__inner reveal">
     <span class="eyebrow">Day one starts now</span>
-    <h2>Stop guessing what the network is doing</h2>
+    <h2><span class="lines"><span class="ln"><span style="--lnd:0ms">Stop guessing what</span></span><span class="ln"><span style="--lnd:70ms">the network is doing</span></span></span></h2>
     <p>Ninety minutes from now you'll have read your own machine's address table,
        pinged your gateway, and understood exactly what happened.</p>
     <div class="hero__cta" style="justify-content:center">
@@ -1052,14 +1499,51 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
 </main>
 
 <footer class="footer">
-  <div class="wrap footer__inner">
-    <p>Packet Path — a 7-day networking course for cybersecurity beginners. Built as a single, self-contained page.</p>
-    <nav aria-label="Footer">
-      <a href="course.html#day-1">Course</a>
-      <a href="course.html#cheatsheet">Cheat sheet</a>
-      <a href="course.html#assessment">Final assessment</a>
-      <a href="#top">Back to top</a>
-    </nav>
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a class="brand" href="#top" aria-label="Packet Path home">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round">
+              <path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="2.4" fill="#FAF9F5" stroke="none"/>
+            </svg>
+          </span>
+          <span class="brand__name">Packet Path</span>
+        </a>
+        <p>A 7-day networking course for people going into security. Two HTML files,
+           no build step, no account, no server — your progress never leaves your browser.</p>
+      </div>
+      <div class="footer__col">
+        <h4>Course</h4>
+        <ul>
+          <li><a href="course.html#day-1">Day 1 — Fundamentals</a></li>
+          <li><a href="course.html#day-3">Day 3 — Protocols</a></li>
+          <li><a href="course.html#day-6">Day 6 — Wireshark</a></li>
+          <li><a href="course.html#day-7">Day 7 — Capstone</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Reference</h4>
+        <ul>
+          <li><a href="course.html#cheatsheet">Cheat sheet</a></li>
+          <li><a href="course.html#assessment">Final assessment</a></li>
+          <li><a href="course.html#next">Where to go next</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>This page</h4>
+        <ul>
+          <li><a href="#journey">One request, end to end</a></li>
+          <li><a href="#curriculum">Curriculum</a></li>
+          <li><a href="#toolkit">Toolkit</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>Every lab runs on your own machine, your own network, or a simulator. Nothing else.</p>
+      <p class="mono">7 days · 21 labs · 0 paid tools</p>
+    </div>
   </div>
 </footer>
 
@@ -1107,11 +1591,33 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
     update();
   });
 
-  /* ---------- Sticky nav shadow ---------- */
+  /* ---------- Sticky nav shadow + scroll cue ---------- */
   var nav = document.getElementById('nav');
-  var onScroll = function () { nav.classList.toggle('is-stuck', window.scrollY > 24); };
+  var cue = document.getElementById('scrollcue');
+  var onScroll = function () {
+    nav.classList.toggle('is-stuck', window.scrollY > 24);
+    if (cue) cue.classList.toggle('is-gone', window.scrollY > 60);
+  };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  /* ---------- pointer-aware lighting on cards (desktop only) ---------- */
+  if (!reduced && window.matchMedia('(hover: hover)').matches) {
+    document.addEventListener('pointermove', function (e) {
+      var card = e.target.closest && e.target.closest('.lit');
+      if (!card) return;
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    }, { passive: true });
+  }
+
+  /* ---------- headings whose lines are already on screen at load ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.lines'), function (h) {
+    if (h.getBoundingClientRect().top < window.innerHeight) {
+      requestAnimationFrame(function () { h.classList.add('is-visible'); });
+    }
+  });
 
   /* ---------- Scroll reveal ---------- */
   var revealEls = document.querySelectorAll('.reveal');
@@ -1235,6 +1741,137 @@ a, button, summary { -webkit-tap-highlight-color: transparent; }
       setTimeout(step, 250);
     }
   }
+
+  /* ============================================================
+     THE JOURNEY — scroll drives eight beats
+     ============================================================ */
+  (function () {
+    var section = document.getElementById('journey');
+    var stage   = document.getElementById('jstage');
+    if (!section || !stage) return;
+
+    var steps  = Array.prototype.slice.call(section.querySelectorAll('.jstep'));
+    var pips   = Array.prototype.slice.call(section.querySelectorAll('.jprog i'));
+    var nodes  = {};
+    Array.prototype.forEach.call(section.querySelectorAll('.jnode'), function (n) {
+      nodes[n.getAttribute('data-node')] = n;
+    });
+    var wires   = Array.prototype.slice.call(section.querySelectorAll('.jwire'));
+    var packet  = document.getElementById('jpacket');
+    var ping    = document.getElementById('jping');
+    var read    = document.getElementById('jread');
+    var stack   = Array.prototype.slice.call(section.querySelectorAll('.jstack i'));
+
+    // Reduced motion: no sticky, no scroll maths — every beat just renders as prose.
+    if (reduced) {
+      section.classList.add('is-static');
+      steps.forEach(function (s) { s.classList.add('is-on'); });
+      return;
+    }
+
+    var POS = {
+      you:      [10, 38],
+      router:   [36, 38],
+      resolver: [36, 78],
+      isp:      [65, 38],
+      server:   [90, 38]
+    };
+
+    // beat: which nodes light up, where the packet sits, which wires are live,
+    // how much of the header stack has been added, and the readout text.
+    var BEATS = [
+      { on: ['you'], at: 'you', live: [], stack: 1,
+        read: ['<b>cache</b> miss · <b>hosts</b> miss', 'resolving <b>example.com</b>…'] },
+      { on: ['you', 'router', 'resolver'], at: 'resolver', live: ['you-router', 'router-resolver'], stack: 1,
+        read: ['. → who handles <b>com</b>?', 'com → who handles <b>example.com</b>?', 'answer <span class="g">A 93.184.216.34</span>'] },
+      { on: ['you'], at: 'you', live: [], stack: 3,
+        read: ['192.168.1.24 AND /24 → <b>192.168.1.0</b>', '93.184.216.34 AND /24 → <b>93.184.216.0</b>', '<b>different</b> → send to gateway'] },
+      { on: ['you', 'router'], at: 'you', live: ['you-router'], stack: 4,
+        read: ['who has <b>192.168.1.1</b>? tell 192.168.1.24', '192.168.1.1 is at <span class="g">a4:2b:b0:11:22:33</span>'] },
+      { on: ['router'], at: 'router', live: ['you-router'], stack: 4,
+        read: ['192.168.1.24:51422', '  ↓ translated', '<b>203.0.113.7:61001</b>'] },
+      { on: ['router', 'isp', 'server'], at: 'isp', live: ['router-isp', 'isp-server'], stack: 4,
+        read: ['hop 1  ttl <b>63</b>', 'hop 2  ttl <b>62</b>', 'hop 3  ttl <b>61</b> …'] },
+      { on: ['you', 'server'], at: 'server', live: ['you-router', 'router-isp', 'isp-server'], stack: 4,
+        read: ['→ <b>SYN</b>   ← <b>SYN, ACK</b>   → <b>ACK</b>', '→ ClientHello  ← certificate', '<span class="g">session key agreed</span>'] },
+      { on: ['you', 'server'], at: 'you', live: ['you-router', 'router-isp', 'isp-server'], stack: 4,
+        read: ['<span class="g">HTTP/1.1 200 OK</span>', 'content-type: text/html', 'painting…'] }
+    ];
+
+    /* Wires are drawn between node centres, so they survive any resize. */
+    function layoutWires() {
+      var box = section.querySelector('.jdiagram').getBoundingClientRect();
+      if (!box.width) return;
+      wires.forEach(function (w) {
+        var a = POS[w.getAttribute('data-from')], b = POS[w.getAttribute('data-to')];
+        var ax = a[0] / 100 * box.width, ay = a[1] / 100 * box.height;
+        var bx = b[0] / 100 * box.width, by = b[1] / 100 * box.height;
+        var dx = bx - ax, dy = by - ay;
+        w.style.left = ax + 'px';
+        w.style.top = ay + 'px';
+        w.style.width = Math.sqrt(dx * dx + dy * dy) + 'px';
+        w.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+      });
+    }
+
+    var current = -1;
+    function paint(i) {
+      if (i === current) return;
+      current = i;
+      var beat = BEATS[i];
+      stage.setAttribute('data-beat', String(i + 1));
+
+      steps.forEach(function (s, k) { s.classList.toggle('is-on', k === i); });
+      pips.forEach(function (p, k) {
+        p.classList.toggle('is-on', k === i);
+        p.classList.toggle('is-past', k < i);
+      });
+      Object.keys(nodes).forEach(function (k) {
+        nodes[k].classList.toggle('is-on', beat.on.indexOf(k) !== -1);
+      });
+      wires.forEach(function (w) {
+        var key = w.getAttribute('data-from') + '-' + w.getAttribute('data-to');
+        w.classList.toggle('is-live', beat.live.indexOf(key) !== -1);
+      });
+      stack.forEach(function (s, k) { s.classList.toggle('is-on', k < beat.stack); });
+
+      var p = POS[beat.at];
+      packet.style.left = p[0] + '%';
+      packet.style.top = p[1] + '%';
+      ping.style.left = p[0] + '%';
+      ping.style.top = p[1] + '%';
+
+      read.innerHTML = beat.read.map(function (l) {
+        return '<span class="jread__line">' + l + '</span>';
+      }).join('');
+      var lines = read.querySelectorAll('.jread__line');
+      Array.prototype.forEach.call(lines, function (l, k) {
+        setTimeout(function () { l.classList.add('is-on'); }, 90 + k * 150);
+      });
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var track = section.querySelector('.journey__track');
+        var r = track.getBoundingClientRect();
+        var span = r.height - window.innerHeight;
+        if (span <= 0) return;
+        var t = Math.min(Math.max(-r.top / span, 0), 0.9999);
+        paint(Math.floor(t * BEATS.length));
+      });
+    }
+
+    layoutWires();
+    paint(0);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', function () { layoutWires(); }, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(layoutWires).observe(section.querySelector('.jdiagram'));
+    onScroll();
+  })();
 
   /* ---------- Hero canvas: nodes and packets ---------- */
   var canvas = document.getElementById('heroCanvas');
