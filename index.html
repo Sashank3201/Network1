@@ -523,62 +523,57 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
           mask-image: radial-gradient(ellipse 78% 70% at 50% 45%, #000 35%, transparent 100%);
 }
 
-.jnode {
-  position: absolute; transform: translate(-50%, -50%); z-index: 2;
-  display: flex; flex-direction: column; align-items: center; gap: 9px;
-  transition: opacity .45s var(--ease);
-  opacity: .32;
+/* --- the route, drawn as one SVG so geometry is identical at every size --- */
+.jsvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.jroute-base {
+  fill: none; stroke: #262220; stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
 }
-.jnode.is-on { opacity: 1; }
-.jnode__box {
-  width: 64px; height: 48px; border-radius: 11px;
-  border: 1px solid #35302B; background: linear-gradient(#232120, #1B1918);
-  display: grid; place-items: center;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; color: #8B837A;
-  transition: border-color .45s var(--ease), box-shadow .45s var(--ease),
-              color .45s var(--ease), transform .45s var(--spring);
+.jroute-trail {
+  fill: none; stroke: var(--term-accent); stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  filter: url(#jglow);
 }
-.jnode.is-on .jnode__box {
-  border-color: rgba(229,130,92,.85); color: var(--term-accent);
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 1px rgba(229,130,92,.2), 0 0 0 7px rgba(229,130,92,.055),
-              0 10px 30px -8px rgba(229,130,92,.42);
-}
-.jnode__label {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: .09em;
-  text-transform: uppercase; color: #6E665E; white-space: nowrap;
-  transition: color .45s var(--ease);
-}
-.jnode.is-on .jnode__label { color: #C9C1B7; }
 
-/* wires: dim by default, with dashes flowing along the live path */
-.jwire { position: absolute; height: 2px; background: #26221F; transform-origin: left center; z-index: 1; border-radius: 2px; }
-.jwire::after {
-  content: ''; position: absolute; inset: 0; border-radius: 2px; opacity: 0;
-  background: repeating-linear-gradient(90deg,
-    var(--term-accent) 0 7px, rgba(229,130,92,.14) 7px 16px);
-  transition: opacity .4s var(--ease);
+.jn__box {
+  fill: #1D1B1A; stroke: #35302B; stroke-width: 1.5;
+  transition: stroke .5s var(--ease), fill .5s var(--ease);
 }
-.jwire.is-live::after { opacity: 1; animation: jflow .55s linear infinite; }
-@keyframes jflow { to { background-position-x: 16px; } }
+.jn__t {
+  font-family: var(--font-mono); font-size: 15px; letter-spacing: .06em;
+  fill: #8B837A; text-anchor: middle; transition: fill .5s var(--ease);
+}
+.jn__l {
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .08em;
+  fill: #665F58; text-anchor: middle; transition: fill .5s var(--ease);
+}
+.jn__ring {
+  fill: none; stroke: var(--term-accent); stroke-width: 1.5;
+  opacity: 0; transform-box: fill-box; transform-origin: center;
+  transition: opacity .5s var(--ease);
+}
+.jn { transition: transform .55s var(--spring); }
+.jn.is-on .jn__box { fill: #2A2422; stroke: rgba(229,130,92,.9); }
+.jn.is-on .jn__t { fill: var(--term-accent); }
+.jn.is-on .jn__l { fill: #C9C1B7; }
+.jn.is-on .jn__ring { opacity: .34; }
 
-.jpacket {
-  position: absolute; width: 15px; height: 11px; border-radius: 3px; z-index: 4;
-  background: linear-gradient(#F3A183, var(--term-accent));
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 4px rgba(229,130,92,.14), 0 0 26px 5px rgba(229,130,92,.5);
-  transition: left .8s var(--ease), top .8s var(--ease);
-  will-change: left, top;
-}
+/* the packet itself — transform only, so it never triggers layout */
+.jpk { pointer-events: none; }
+.jpk__core { fill: #FBC4AC; }
+.jpk__halo { fill: url(#jpkGrad); }
+
+/* the ARP broadcast ripple. Needs an explicit fill:none — an SVG <circle>
+   defaults to a solid black fill, which paints a disc over the route. */
 .jping {
-  position: absolute; width: 15px; height: 15px; border-radius: 50%; z-index: 3;
-  border: 1px solid rgba(229,130,92,.7); transform: translate(-50%, -50%);
+  fill: none; stroke: rgba(229,130,92,.7); stroke-width: 1.5;
+  transform-box: fill-box; transform-origin: center;
   opacity: 0; pointer-events: none;
 }
-.jstage[data-beat="4"] .jping { animation: jping 1.8s var(--ease-out) infinite; }
+.jstage[data-beat="4"] .jping { animation: jping 1.9s var(--ease-out) infinite; }
 @keyframes jping {
-  from { opacity: .65; transform: translate(-50%, -50%) scale(1); }
-  to   { opacity: 0;   transform: translate(-50%, -50%) scale(13); }
+  from { opacity: .7; transform: scale(.25); }
+  to   { opacity: 0;  transform: scale(3.2); }
 }
 
 /* readout: a terminal line, not a big empty panel */
@@ -634,8 +629,8 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
   .journey__track { height: 500vh; }
   .jstage { padding-top: 44px; padding-bottom: 44px; gap: 24px; }
   .jdiagram { height: min(46vh, 360px); }
-  .jnode__box { width: 52px; height: 40px; font-size: 12px; }
-  .jnode__label { font-size: 12px; letter-spacing: .03em; }
+  .jn__t { font-size: 19px; }
+  .jn__l { font-size: 16px; }
   .jstack { font-size: 12px; gap: 4px; }
   .jstack i { padding: 4px 7px; }
   .jread { font-size: 12px; left: 14px; right: 14px; }
@@ -1066,7 +1061,7 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
 </section>
 
 <!-- ========================= THE JOURNEY ========================= -->
-<section class="journey" id="journey" aria-label="What happens when you press Enter">
+<section class="journey is-static" id="journey" aria-label="What happens when you press Enter">
   <div class="journey__track">
     <div class="jstage" id="jstage" data-beat="1">
 
@@ -1143,33 +1138,65 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
           <i class="hdr">+ Ethernet 14B</i>
         </div>
 
-        <span class="jwire" data-from="you" data-to="router"></span>
-        <span class="jwire" data-from="router" data-to="resolver"></span>
-        <span class="jwire" data-from="router" data-to="isp"></span>
-        <span class="jwire" data-from="isp" data-to="server"></span>
+        <svg class="jsvg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" focusable="false">
+          <defs>
+            <filter id="jglow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="jpkGrad">
+              <stop offset="0%"   stop-color="#E5825C" stop-opacity=".55"/>
+              <stop offset="45%"  stop-color="#E5825C" stop-opacity=".22"/>
+              <stop offset="100%" stop-color="#E5825C" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
 
-        <div class="jnode is-on" data-node="you" style="left:11%;top:33%">
-          <span class="jnode__box">YOU</span><span class="jnode__label">192.168.1.24</span>
-        </div>
-        <div class="jnode" data-node="router" style="left:37%;top:33%">
-          <span class="jnode__box">RTR</span><span class="jnode__label">gateway</span>
-        </div>
-        <div class="jnode" data-node="resolver" style="left:37%;top:63%">
-          <span class="jnode__box">DNS</span><span class="jnode__label">resolver</span>
-        </div>
-        <div class="jnode" data-node="isp" style="left:65%;top:33%">
-          <span class="jnode__box">ISP</span><span class="jnode__label">hops</span>
-        </div>
-        <div class="jnode" data-node="server" style="left:89%;top:33%">
-          <span class="jnode__box">SRV</span><span class="jnode__label">93.184.216.34</span>
-        </div>
+          <path class="jroute-base"  id="jrouteBase"  d=""/>
+          <path class="jroute-trail" id="jrouteTrail" d=""/>
 
-        <span class="jping" id="jping" style="left:11%;top:33%"></span>
-        <span class="jpacket" id="jpacket" style="left:11%;top:33%"></span>
+          <circle class="jping" id="jping" cx="120" cy="250" r="34"/>
+
+          <g id="jnodes">
+          <g class="jn" data-node="you" transform="translate(120,250)">
+            <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
+            <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
+            <text class="jn__t" y="6">YOU</text>
+            <text class="jn__l" y="52">192.168.1.24</text>
+          </g>
+          <g class="jn" data-node="router" transform="translate(380,250)">
+            <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
+            <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
+            <text class="jn__t" y="6">RTR</text>
+            <text class="jn__l" y="52">gateway</text>
+          </g>
+          <g class="jn" data-node="resolver" transform="translate(395,470)">
+            <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
+            <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
+            <text class="jn__t" y="6">DNS</text>
+            <text class="jn__l" y="52">resolver</text>
+          </g>
+          <g class="jn" data-node="isp" transform="translate(660,250)">
+            <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
+            <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
+            <text class="jn__t" y="6">ISP</text>
+            <text class="jn__l" y="52">hops</text>
+          </g>
+          <g class="jn" data-node="server" transform="translate(880,250)">
+            <rect class="jn__ring" x="-52" y="-36" width="104" height="72" rx="18"/>
+            <rect class="jn__box"  x="-42" y="-27" width="84" height="54" rx="13"/>
+            <text class="jn__t" y="6">SRV</text>
+            <text class="jn__l" y="52">93.184.216.34</text>
+          </g>
+          </g>
+
+          <g class="jpk" id="jpacket" transform="translate(120,250)">
+            <circle class="jpk__halo" r="30"/>
+            <rect class="jpk__core" x="-9" y="-6.5" width="18" height="13" rx="3.5"/>
+          </g>
+        </svg>
 
         <div class="jread" id="jread"></div>
       </div>
-
     </div>
   </div>
 </section>
@@ -1780,134 +1807,177 @@ html.theming, html.theming *, html.theming *::before, html.theming *::after {
   }
 
   /* ============================================================
-     THE JOURNEY — scroll drives eight beats
+     THE JOURNEY — scroll drives one continuous route
+     Motion is eased frame-by-frame rather than snapped between states,
+     and the packet moves by transform only, so it never forces layout.
      ============================================================ */
   (function () {
     var section = document.getElementById('journey');
     var stage   = document.getElementById('jstage');
     if (!section || !stage) return;
 
-    var steps  = Array.prototype.slice.call(section.querySelectorAll('.jstep'));
-    var pips   = Array.prototype.slice.call(section.querySelectorAll('.jprog i'));
-    var nodes  = {};
-    Array.prototype.forEach.call(section.querySelectorAll('.jnode'), function (n) {
+    section.classList.remove('is-static');          // JS is available
+
+    var steps = Array.prototype.slice.call(section.querySelectorAll('.jstep'));
+    var pips  = Array.prototype.slice.call(section.querySelectorAll('.jprog i'));
+    var stack = Array.prototype.slice.call(section.querySelectorAll('.jstack i'));
+    var nodes = {};
+    Array.prototype.forEach.call(section.querySelectorAll('.jn'), function (n) {
       nodes[n.getAttribute('data-node')] = n;
     });
-    var wires   = Array.prototype.slice.call(section.querySelectorAll('.jwire'));
-    var packet  = document.getElementById('jpacket');
-    var ping    = document.getElementById('jping');
-    var read    = document.getElementById('jread');
-    var stack   = Array.prototype.slice.call(section.querySelectorAll('.jstack i'));
+    var base   = document.getElementById('jrouteBase');
+    var trail  = document.getElementById('jrouteTrail');
+    var packet = document.getElementById('jpacket');
+    var ping   = document.getElementById('jping');
+    var read   = document.getElementById('jread');
+    var track  = section.querySelector('.journey__track');
 
-    // Reduced motion: no sticky, no scroll maths — every beat just renders as prose.
     if (reduced) {
       section.classList.add('is-static');
       steps.forEach(function (s) { s.classList.add('is-on'); });
       return;
     }
 
-    var POS = {
-      you:      [11, 33],
-      router:   [37, 33],
-      resolver: [37, 63],
-      isp:      [65, 33],
-      server:   [89, 33]
-    };
+    /* The request's actual route, in order: out to the resolver and back,
+       then the real packet to the gateway, across the hops, and home again. */
+    var SEGS = [
+      'M120,250 L336,250 C366,250 374,268 375,300 L375,430 C375,456 378,470 395,470',
+      'M395,470 C412,470 415,456 415,430 L415,300 C416,268 408,252 380,250 L120,250',
+      'M120,250 L380,250',
+      'M380,250 L660,250 L880,250',
+      'M880,250 C946,250 962,196 940,164 C918,132 880,110 840,110 L240,110 ' +
+      'C168,110 120,150 120,196 L120,250'
+    ];
 
-    // beat: which nodes light up, where the packet sits, which wires are live,
-    // how much of the header stack has been added, and the readout text.
+    /* Join into a SINGLE subpath. Every M starts a new subpath, and
+       stroke-dasharray restarts on each one — which would draw every leg in
+       full regardless of the offset. Each leg already begins where the last
+       ended, so the moveto is redundant anyway. */
+    var d = SEGS.map(function (seg, i) {
+      return i === 0 ? seg : seg.replace(/^M[-\d.,\s]+/, '');
+    }).join(' ');
+    base.setAttribute('d', d);
+    trail.setAttribute('d', d);
+
+    /* Measure each leg so beats can be pinned to real waypoints. */
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var probe = document.createElementNS(svgNS, 'path');
+    base.parentNode.appendChild(probe);
+    var cum = [0];
+    SEGS.forEach(function (seg) {
+      probe.setAttribute('d', seg);
+      cum.push(cum[cum.length - 1] + probe.getTotalLength());
+    });
+    probe.parentNode.removeChild(probe);
+
+    var TOTAL = trail.getTotalLength();
+    trail.style.strokeDasharray = TOTAL;
+    trail.style.strokeDashoffset = TOTAL;
+
+    /* Where each beat ends along the route. Repeats mean the packet holds
+       position for that beat — the DNS answer arriving, NAT rewriting, the
+       handshakes — which is exactly when the story is standing still. */
+    var MARKS = [0, cum[2], cum[2], cum[3], cum[3], cum[4], cum[4], cum[5]];
+
     var BEATS = [
-      { on: ['you'], at: 'you', live: [], stack: 1,
+      { on: ['you'], stack: 1,
         read: ['<b>cache</b> miss · <b>hosts</b> miss', 'resolving <b>example.com</b>…'] },
-      { on: ['you', 'router', 'resolver'], at: 'resolver', live: ['you-router', 'router-resolver'], stack: 1,
+      { on: ['you', 'router', 'resolver'], stack: 1,
         read: ['. → who handles <b>com</b>?', 'com → who handles <b>example.com</b>?', 'answer <span class="g">A 93.184.216.34</span>'] },
-      { on: ['you'], at: 'you', live: [], stack: 3,
+      { on: ['you'], stack: 3,
         read: ['192.168.1.24 AND /24 → <b>192.168.1.0</b>', '93.184.216.34 AND /24 → <b>93.184.216.0</b>', '<b>different</b> → send to gateway'] },
-      { on: ['you', 'router'], at: 'you', live: ['you-router'], stack: 4,
+      { on: ['you', 'router'], stack: 4,
         read: ['who has <b>192.168.1.1</b>? tell 192.168.1.24', '192.168.1.1 is at <span class="g">a4:2b:b0:11:22:33</span>'] },
-      { on: ['router'], at: 'router', live: ['you-router'], stack: 4,
+      { on: ['router'], stack: 4,
         read: ['192.168.1.24:51422', '  ↓ translated', '<b>203.0.113.7:61001</b>'] },
-      { on: ['router', 'isp', 'server'], at: 'isp', live: ['router-isp', 'isp-server'], stack: 4,
+      { on: ['router', 'isp', 'server'], stack: 4,
         read: ['hop 1  ttl <b>63</b>', 'hop 2  ttl <b>62</b>', 'hop 3  ttl <b>61</b> …'] },
-      { on: ['you', 'server'], at: 'server', live: ['you-router', 'router-isp', 'isp-server'], stack: 4,
+      { on: ['you', 'server'], stack: 4,
         read: ['→ <b>SYN</b>   ← <b>SYN, ACK</b>   → <b>ACK</b>', '→ ClientHello  ← certificate', '<span class="g">session key agreed</span>'] },
-      { on: ['you', 'server'], at: 'you', live: ['you-router', 'router-isp', 'isp-server'], stack: 4,
+      { on: ['you', 'server'], stack: 4,
         read: ['<span class="g">HTTP/1.1 200 OK</span>', 'content-type: text/html', 'painting…'] }
     ];
 
-    /* Wires are drawn between node centres, so they survive any resize. */
-    function layoutWires() {
-      var box = section.querySelector('.jdiagram').getBoundingClientRect();
-      if (!box.width) return;
-      wires.forEach(function (w) {
-        var a = POS[w.getAttribute('data-from')], b = POS[w.getAttribute('data-to')];
-        var ax = a[0] / 100 * box.width, ay = a[1] / 100 * box.height;
-        var bx = b[0] / 100 * box.width, by = b[1] / 100 * box.height;
-        var dx = bx - ax, dy = by - ay;
-        w.style.left = ax + 'px';
-        w.style.top = ay + 'px';
-        w.style.width = Math.sqrt(dx * dx + dy * dy) + 'px';
-        w.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
-      });
+    var N = BEATS.length;
+    var smooth = function (x) { return x * x * (3 - 2 * x); };   // ease in and out of each beat
+
+    function targetLength(t) {
+      var scaled = Math.min(Math.max(t, 0), 0.99999) * N;
+      var i = Math.floor(scaled);
+      var from = i === 0 ? 0 : MARKS[i - 1];
+      return from + (MARKS[i] - from) * smooth(scaled - i);
     }
 
-    var current = -1;
-    function paint(i) {
-      if (i === current) return;
-      current = i;
-      var beat = BEATS[i];
+    var beat = -1;
+    function setBeat(i) {
+      if (i === beat) return;
+      beat = i;
+      var b = BEATS[i];
       stage.setAttribute('data-beat', String(i + 1));
-
       steps.forEach(function (s, k) { s.classList.toggle('is-on', k === i); });
       pips.forEach(function (p, k) {
         p.classList.toggle('is-on', k === i);
         p.classList.toggle('is-past', k < i);
       });
       Object.keys(nodes).forEach(function (k) {
-        nodes[k].classList.toggle('is-on', beat.on.indexOf(k) !== -1);
+        nodes[k].classList.toggle('is-on', b.on.indexOf(k) !== -1);
       });
-      wires.forEach(function (w) {
-        var key = w.getAttribute('data-from') + '-' + w.getAttribute('data-to');
-        w.classList.toggle('is-live', beat.live.indexOf(key) !== -1);
-      });
-      stack.forEach(function (s, k) { s.classList.toggle('is-on', k < beat.stack); });
+      stack.forEach(function (el, k) { el.classList.toggle('is-on', k < b.stack); });
 
-      var p = POS[beat.at];
-      packet.style.left = p[0] + '%';
-      packet.style.top = p[1] + '%';
-      ping.style.left = p[0] + '%';
-      ping.style.top = p[1] + '%';
-
-      read.innerHTML = beat.read.map(function (l) {
+      read.innerHTML = b.read.map(function (l) {
         return '<span class="jread__line">' + l + '</span>';
       }).join('');
-      var lines = read.querySelectorAll('.jread__line');
-      Array.prototype.forEach.call(lines, function (l, k) {
-        setTimeout(function () { l.classList.add('is-on'); }, 90 + k * 150);
+      Array.prototype.forEach.call(read.querySelectorAll('.jread__line'), function (l, k) {
+        setTimeout(function () { l.classList.add('is-on'); }, 80 + k * 140);
       });
     }
 
-    var ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function () {
-        ticking = false;
-        var track = section.querySelector('.journey__track');
-        var r = track.getBoundingClientRect();
-        var span = r.height - window.innerHeight;
-        if (span <= 0) return;
-        var t = Math.min(Math.max(-r.top / span, 0), 0.9999);
-        paint(Math.floor(t * BEATS.length));
-      });
+    /* ---- the loop: ease toward the scroll target, park when settled ---- */
+    var targetT = 0, renderedLen = 0, running = false, visible = false;
+
+    function readScroll() {
+      var r = track.getBoundingClientRect();
+      var span = r.height - window.innerHeight;
+      targetT = span > 0 ? Math.min(Math.max(-r.top / span, 0), 0.99999) : 0;
     }
 
-    layoutWires();
-    paint(0);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', function () { layoutWires(); }, { passive: true });
-    if (window.ResizeObserver) new ResizeObserver(layoutWires).observe(section.querySelector('.jdiagram'));
-    onScroll();
+    function draw() {
+      var want = targetLength(targetT);
+      renderedLen += (want - renderedLen) * 0.12;
+      if (Math.abs(want - renderedLen) < 0.35) renderedLen = want;
+
+      var pt = trail.getPointAtLength(renderedLen);
+      packet.setAttribute('transform', 'translate(' + pt.x.toFixed(2) + ',' + pt.y.toFixed(2) + ')');
+      trail.style.strokeDashoffset = (TOTAL - renderedLen).toFixed(2);
+      ping.setAttribute('cx', pt.x.toFixed(2));
+      ping.setAttribute('cy', pt.y.toFixed(2));
+
+      setBeat(Math.floor(Math.min(Math.max(targetT, 0), 0.99999) * N));
+
+      // settled, or scrolled away — park the loop so an idle page costs nothing
+      if (renderedLen === want) { running = false; return; }
+      requestAnimationFrame(draw);
+    }
+
+    function kick() {
+      readScroll();
+      if (!running) { running = true; requestAnimationFrame(draw); }
+    }
+
+    window.addEventListener('scroll', function () { if (visible) kick(); }, { passive: true });
+    window.addEventListener('resize', kick, { passive: true });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        visible = entries[0].isIntersecting;
+        if (visible) kick();
+      }, { rootMargin: '200px 0px' }).observe(section);
+    } else { visible = true; }
+
+    readScroll();
+    renderedLen = targetLength(targetT);
+    setBeat(Math.floor(targetT * N));
+    kick();
   })();
 
   /* ---------- Hero canvas: nodes and packets ---------- */

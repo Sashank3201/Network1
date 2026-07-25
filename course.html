@@ -438,8 +438,10 @@ tr.is-filtered { display:none; }
   padding:28px; box-shadow:var(--shadow-sm); }
 .aq { border-top:1px solid var(--border); padding:18px 0; }
 .aq:first-of-type { border-top:none; padding-top:0; }
-.aq__q { font-size:15.4px; color:var(--ink); font-weight:500; margin-bottom:12px; display:flex; gap:10px; }
-.aq__q i { font-family:var(--font-mono); font-style:normal; font-size:12.5px; color:var(--accent); flex-shrink:0; }
+/* NOT flex: every element child of a flex container becomes its own flex item,
+   which tore inline <code> out of the sentence and stacked it as columns. */
+.aq__q { font-size:15.4px; color:var(--ink); font-weight:500; margin-bottom:12px; display:block; }
+.aq__q i { font-family:var(--font-mono); font-style:normal; font-size:12.5px; color:var(--accent); margin-right:9px; }
 .aq__opts { display:grid; gap:7px; }
 .aopt { display:flex; align-items:flex-start; gap:10px; padding:10px 13px; border-radius:var(--radius-sm);
   border:1px solid var(--border); background:var(--bg-alt); font-size:14.4px; cursor:pointer;
